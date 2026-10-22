@@ -46,6 +46,8 @@ public partial class Game : Node2D
         // Connect signals
         _player.HealthChanged += OnPlayerHealthChanged;
         _player.PlayerDied += OnPlayerDied;
+        _player.StatsChanged += OnPlayerStatsChanged;
+        _player.ConsumablesChanged += OnConsumablesChanged;
         HookRoomManagerSignals();
 
         if (Systems.GameManager.Instance != null)
@@ -56,7 +58,25 @@ public partial class Game : Node2D
 
         // Initial HUD & Minimap update
         OnPlayerHealthChanged(_player.Stats.CurrentHealth, _player.Stats.MaxHealth);
+        OnPlayerStatsChanged();
+        OnConsumablesChanged(_player.Stats.Coins, _player.Stats.Bombs, _player.Stats.Keys);
         OnRoomEntered(_roomManager.CurrentRoomPos);
+    }
+
+    private void OnPlayerStatsChanged()
+    {
+        if (_player == null || _hud == null) return;
+        _hud.UpdateStats(
+            _player.Stats.Damage,
+            _player.Stats.FireRate,
+            _player.Stats.MoveSpeed,
+            _player.Stats.ProjectileRange
+        );
+    }
+
+    private void OnConsumablesChanged(int coins, int bombs, int keys)
+    {
+        _hud?.UpdateConsumables(coins, bombs, keys);
     }
 
     private void HookRoomManagerSignals()
@@ -85,8 +105,13 @@ public partial class Game : Node2D
 
     private void OnPlayerDied()
     {
-        GD.Print("Player died! Run over.");
-        // GameManager handles the transition back to menu
+        GD.Print("Player died! Showing Game Over summary.");
+        int floor = Systems.GameManager.Instance?.CurrentFloor ?? 1;
+        int rooms = Systems.GameManager.Instance?.RoomsCleared ?? 0;
+        int enemies = _player?.Stats?.EnemiesKilled ?? 0;
+        int items = _player?.Stats?.ItemsCollected ?? 0;
+
+        _hud?.ShowGameOver(floor, rooms, enemies, items);
     }
 
     private void OnRoomCleared()
@@ -119,10 +144,11 @@ public partial class Game : Node2D
 
     public override void _Input(InputEvent @event)
     {
-        // Escape to pause/return to menu
+        // Escape toggles pause overlay
         if (@event.IsActionPressed("ui_cancel"))
         {
-            Systems.GameManager.Instance?.ReturnToMenu();
+            _hud?.TogglePauseMenu();
+            GetViewport().SetInputAsHandled();
         }
     }
 }
