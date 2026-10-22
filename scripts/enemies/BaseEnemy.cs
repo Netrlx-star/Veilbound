@@ -125,7 +125,18 @@ public partial class BaseEnemy : CharacterBody2D
         IsDead = true;
         EmitSignal(SignalName.EnemyDied);
 
-        // TODO: Drop pickups, spawn death particles
+        // 25% chance to drop a healing heart upon death
+        if (GD.Randf() < 0.25f)
+        {
+            var heartScene = GD.Load<PackedScene>("res://scenes/items/HeartPickup.tscn");
+            if (heartScene != null)
+            {
+                var heart = heartScene.Instantiate<Node2D>();
+                heart.GlobalPosition = GlobalPosition;
+                GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, heart);
+            }
+        }
+
         // Simple death animation: shrink and fade
         var tween = CreateTween();
         tween.SetParallel(true);

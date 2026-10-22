@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/items/HeartPickup.cs" id="1_heart"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_heart"]
+radius = 10.0
+
+[node name="HeartPickup" type="Area2D"]
+collision_layer = 32
+collision_mask = 2
+script = ExtResource("1_heart")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_heart")
