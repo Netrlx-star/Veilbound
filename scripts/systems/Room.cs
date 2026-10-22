@@ -252,6 +252,15 @@ public partial class Room : Node2D
     }
 
     /// <summary>
+    /// Lock the room (doors become red/solid) during combat.
+    /// </summary>
+    public void LockRoom()
+    {
+        IsCleared = false;
+        UpdateDoorVisuals(locked: true);
+    }
+
+    /// <summary>
     /// Mark this room as already cleared (for revisiting).
     /// </summary>
     public void SetCleared()

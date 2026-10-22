@@ -31,10 +31,20 @@ public partial class RoomManager : Node2D
     private HashSet<Vector2I> _clearedRooms = new();
     private HashSet<Vector2I> _takenItemRooms = new();
 
+    public int[,] Grid => _grid;
+    public HashSet<Vector2I> VisitedRooms => _visitedRooms;
+    public Vector2I CurrentRoomPos => _currentRoomPos;
+
+    [Signal] public delegate void RoomEnteredEventHandler(Vector2I currentPos);
+    [Signal] public delegate void BossHealthChangedEventHandler(string name, float current, float max);
+    [Signal] public delegate void BossDefeatedEventHandler();
+
     // ── Enemy scenes ──
     private PackedScene _flyEnemyScene;
     private PackedScene _chaserEnemyScene;
     private PackedScene _shooterEnemyScene;
+    private PackedScene _bossScene;
+    private PackedScene _trapdoorScene;
 
     // ── Player reference ──
     private Node2D _player;
@@ -44,6 +54,8 @@ public partial class RoomManager : Node2D
         _flyEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/FlyEnemy.tscn");
         _chaserEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/ChaserEnemy.tscn");
         _shooterEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/ShooterEnemy.tscn");
+        _bossScene = GD.Load<PackedScene>("res://scenes/bosses/BossEnemy.tscn");
+        _trapdoorScene = GD.Load<PackedScene>("res://scenes/rooms/Trapdoor.tscn");
 
         GenerateFloor();
         EnterRoom(_currentRoomPos, "center");
@@ -198,6 +210,8 @@ public partial class RoomManager : Node2D
         {
             SpawnTreasurePedestal(room, gridPos);
         }
+
+        EmitSignal(SignalName.RoomEntered, gridPos);
     }
 
     private void SpawnTreasurePedestal(Room room, Vector2I gridPos)
@@ -225,8 +239,7 @@ public partial class RoomManager : Node2D
                 break;
 
             case 2: // Boss room
-                // Handled in Boss milestone
-                room.SetCleared();
+                SpawnBoss(room, _currentRoomPos);
                 break;
 
             case 3: // Treasure room
@@ -237,6 +250,41 @@ public partial class RoomManager : Node2D
                 room.SetCleared();
                 break;
         }
+    }
+
+    private void SpawnBoss(Room room, Vector2I gridPos)
+    {
+        if (_bossScene == null) return;
+
+        var boss = _bossScene.Instantiate<Bosses.BossEnemy>();
+        boss.Position = new Vector2(Room.RoomWidth / 2.0f, Room.RoomHeight / 2.0f);
+        room.LockRoom();
+
+        boss.BossHealthUpdated += (cur, max) =>
+        {
+            EmitSignal(SignalName.BossHealthChanged, Bosses.BossEnemy.BossName, cur, max);
+        };
+
+        boss.EnemyDied += () =>
+        {
+            _clearedRooms.Add(gridPos);
+            EmitSignal(SignalName.BossDefeated);
+            room.SetCleared();
+            GameManager.Instance?.OnRoomCleared();
+
+            // Spawn Trapdoor to next floor
+            if (_trapdoorScene != null)
+            {
+                var trapdoor = _trapdoorScene.Instantiate<Node2D>();
+                trapdoor.Position = new Vector2(Room.RoomWidth / 2.0f, Room.RoomHeight / 2.0f);
+                room.AddChild(trapdoor);
+            }
+
+            // Spawn Boss Reward Item Pedestal
+            SpawnTreasurePedestal(room, gridPos);
+        };
+
+        room.AddChild(boss);
     }
 
     private void OnDoorEntered(string direction)

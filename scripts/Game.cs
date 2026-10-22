@@ -46,7 +46,7 @@ public partial class Game : Node2D
         // Connect signals
         _player.HealthChanged += OnPlayerHealthChanged;
         _player.PlayerDied += OnPlayerDied;
-        _roomManager.RoomEntered += OnRoomEntered;
+        HookRoomManagerSignals();
 
         if (Systems.GameManager.Instance != null)
         {
@@ -59,9 +59,23 @@ public partial class Game : Node2D
         OnRoomEntered(_roomManager.CurrentRoomPos);
     }
 
+    private void HookRoomManagerSignals()
+    {
+        if (_roomManager == null) return;
+        _roomManager.RoomEntered += OnRoomEntered;
+        _roomManager.BossHealthChanged += (name, cur, max) => _hud?.ShowBossBar(name, cur, max);
+        _roomManager.BossDefeated += () => _hud?.HideBossBar();
+    }
+
     private void OnRoomEntered(Vector2I currentPos)
     {
         _hud?.UpdateMinimap(_roomManager.Grid, _roomManager.VisitedRooms, currentPos);
+
+        // Hide boss bar if entering a non-boss room
+        if (_roomManager.Grid[currentPos.X, currentPos.Y] != 2)
+        {
+            _hud?.HideBossBar();
+        }
     }
 
     private void OnPlayerHealthChanged(int currentHealth, int maxHealth)
@@ -84,6 +98,23 @@ public partial class Game : Node2D
     private void OnFloorChanged(int newFloor)
     {
         _hud?.UpdateFloorDisplay(newFloor);
+        _hud?.HideBossBar();
+
+        // Regenerate new dungeon floor
+        _roomManager?.QueueFree();
+        _roomManager = new Systems.RoomManager();
+        AddChild(_roomManager);
+        HookRoomManagerSignals();
+
+        // Reset player visuals and position for new floor
+        if (_player != null)
+        {
+            _player.GlobalPosition = new Vector2(640, 360);
+            _player.Scale = Vector2.One;
+            _player.Modulate = Colors.White;
+        }
+
+        OnRoomEntered(_roomManager.CurrentRoomPos);
     }
 
     public override void _Input(InputEvent @event)

@@ -13,6 +13,11 @@ public partial class HUD : CanvasLayer
     private Label _roomsLabel;
     private Minimap _minimap;
 
+    // Boss Bar
+    private Control _bossBarContainer;
+    private Label _bossNameLabel;
+    private ProgressBar _bossProgressBar;
+
     // Heart colors
     private static readonly Color FullHeartColor = new(0.9f, 0.15f, 0.15f);
     private static readonly Color HalfHeartColor = new(0.9f, 0.15f, 0.15f, 0.5f);
@@ -25,8 +30,34 @@ public partial class HUD : CanvasLayer
         _roomsLabel = GetNode<Label>("%RoomsLabel");
         _minimap = GetNodeOrNull<Minimap>("%Minimap");
 
+        _bossBarContainer = GetNodeOrNull<Control>("%BossBarContainer");
+        _bossNameLabel = GetNodeOrNull<Label>("%BossNameLabel");
+        _bossProgressBar = GetNodeOrNull<ProgressBar>("%BossProgressBar");
+
+        if (_bossBarContainer != null) _bossBarContainer.Visible = false;
+
         UpdateFloorDisplay(1);
         UpdateRoomsDisplay(0);
+    }
+
+    public void ShowBossBar(string name, float current, float max)
+    {
+        if (_bossBarContainer == null) return;
+        _bossBarContainer.Visible = true;
+        if (_bossNameLabel != null) _bossNameLabel.Text = name;
+        if (_bossProgressBar != null)
+        {
+            _bossProgressBar.MaxValue = max;
+            _bossProgressBar.Value = current;
+        }
+    }
+
+    public void HideBossBar()
+    {
+        if (_bossBarContainer != null)
+        {
+            _bossBarContainer.Visible = false;
+        }
     }
 
     public void UpdateMinimap(int[,] grid, System.Collections.Generic.HashSet<Vector2I> visited, Vector2I currentPos)
