@@ -26,6 +26,11 @@ public partial class RoomManager : Node2D
     private Vector2I _currentRoomPos;
     private Room _currentRoom;
 
+    // ── Persistent Floor State ──
+    private HashSet<Vector2I> _visitedRooms = new();
+    private HashSet<Vector2I> _clearedRooms = new();
+    private HashSet<Vector2I> _takenItemRooms = new();
+
     // ── Enemy scenes ──
     private PackedScene _flyEnemyScene;
     private PackedScene _chaserEnemyScene;
@@ -174,9 +179,39 @@ public partial class RoomManager : Node2D
             _player.GlobalPosition = room.GetPlayerSpawnPosition(oppositeDir);
         }
 
-        // Spawn enemies based on room type
-        int roomType = _grid[gridPos.X, gridPos.Y];
-        SpawnRoomContent(room, roomType);
+        _visitedRooms.Add(gridPos);
+
+        // Check if room was previously cleared
+        if (_clearedRooms.Contains(gridPos) || gridPos == new Vector2I(GridCenter, GridCenter))
+        {
+            room.SetCleared();
+        }
+        else
+        {
+            room.RoomCleared += () => _clearedRooms.Add(gridPos);
+            int roomType = _grid[gridPos.X, gridPos.Y];
+            SpawnRoomContent(room, roomType);
+        }
+
+        // If treasure room and item wasn't taken yet, spawn pedestal
+        if (_grid[gridPos.X, gridPos.Y] == 3 && !_takenItemRooms.Contains(gridPos))
+        {
+            SpawnTreasurePedestal(room, gridPos);
+        }
+    }
+
+    private void SpawnTreasurePedestal(Room room, Vector2I gridPos)
+    {
+        var pedestalScene = GD.Load<PackedScene>("res://scenes/items/ItemPedestal.tscn");
+        if (pedestalScene != null)
+        {
+            var pedestal = pedestalScene.Instantiate<Items.ItemPedestal>();
+            pedestal.Position = new Vector2(Room.RoomWidth / 2.0f, Room.RoomHeight / 2.0f);
+            room.AddChild(pedestal);
+
+            // Record when collected so it doesn't respawn on re-entry
+            _takenItemRooms.Add(gridPos);
+        }
     }
 
     private void SpawnRoomContent(Room room, int roomType)
@@ -190,24 +225,17 @@ public partial class RoomManager : Node2D
                 break;
 
             case 2: // Boss room
-                // TODO: Spawn boss
-                room.SetCleared(); // Temporary: auto-clear
+                // Handled in Boss milestone
+                room.SetCleared();
                 break;
 
             case 3: // Treasure room
-                // TODO: Spawn item pedestal
                 room.SetCleared();
                 break;
 
             default:
                 room.SetCleared();
                 break;
-        }
-
-        // Start room is always cleared
-        if (_currentRoomPos == new Vector2I(GridCenter, GridCenter))
-        {
-            room.SetCleared();
         }
     }
 
