@@ -46,6 +46,7 @@ public partial class Game : Node2D
         // Connect signals
         _player.HealthChanged += OnPlayerHealthChanged;
         _player.PlayerDied += OnPlayerDied;
+        _roomManager.RoomEntered += OnRoomEntered;
 
         if (Systems.GameManager.Instance != null)
         {
@@ -53,8 +54,14 @@ public partial class Game : Node2D
             Systems.GameManager.Instance.FloorChanged += OnFloorChanged;
         }
 
-        // Initial HUD update
+        // Initial HUD & Minimap update
         OnPlayerHealthChanged(_player.Stats.CurrentHealth, _player.Stats.MaxHealth);
+        OnRoomEntered(_roomManager.CurrentRoomPos);
+    }
+
+    private void OnRoomEntered(Vector2I currentPos)
+    {
+        _hud?.UpdateMinimap(_roomManager.Grid, _roomManager.VisitedRooms, currentPos);
     }
 
     private void OnPlayerHealthChanged(int currentHealth, int maxHealth)

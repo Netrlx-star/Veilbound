@@ -11,6 +11,7 @@ public partial class HUD : CanvasLayer
     private HBoxContainer _heartsContainer;
     private Label _floorLabel;
     private Label _roomsLabel;
+    private Minimap _minimap;
 
     // Heart colors
     private static readonly Color FullHeartColor = new(0.9f, 0.15f, 0.15f);
@@ -22,9 +23,15 @@ public partial class HUD : CanvasLayer
         _heartsContainer = GetNode<HBoxContainer>("%HeartsContainer");
         _floorLabel = GetNode<Label>("%FloorLabel");
         _roomsLabel = GetNode<Label>("%RoomsLabel");
+        _minimap = GetNodeOrNull<Minimap>("%Minimap");
 
         UpdateFloorDisplay(1);
         UpdateRoomsDisplay(0);
+    }
+
+    public void UpdateMinimap(int[,] grid, System.Collections.Generic.HashSet<Vector2I> visited, Vector2I currentPos)
+    {
+        _minimap?.Refresh(grid, visited, currentPos);
     }
 
     /// <summary>
