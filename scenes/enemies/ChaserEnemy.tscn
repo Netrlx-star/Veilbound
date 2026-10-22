@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/ChaserEnemy.cs" id="1_chaser"]
+[ext_resource type="Script" path="res://scripts/systems/PlaceholderSprite.cs" id="2_placeholder"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_chaser"]
+radius = 14.0
+
+[node name="ChaserEnemy" type="CharacterBody2D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_chaser")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="PlaceholderSprite" type="Node" parent="."]
+script = ExtResource("2_placeholder")
+SpriteColor = Color(0.6, 0.3, 0.1, 1)
+SpriteSize = Vector2i(26, 30)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_chaser")
