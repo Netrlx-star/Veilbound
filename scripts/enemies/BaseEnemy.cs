@@ -125,6 +125,17 @@ public partial class BaseEnemy : CharacterBody2D
         IsDead = true;
         EmitSignal(SignalName.EnemyDied);
 
+        var player = GetTree().GetFirstNodeInGroup("player") as Player.PlayerController;
+        if (player != null)
+        {
+            player.Stats.EnemiesKilled++;
+            // 20% chance for killed enemy to yield a coin
+            if (GD.Randf() < 0.20f)
+            {
+                player.AddCoins(1);
+            }
+        }
+
         // 25% chance to drop a healing heart upon death
         if (GD.Randf() < 0.25f)
         {

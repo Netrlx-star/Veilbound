@@ -60,6 +60,9 @@ public partial class ItemPedestal : Node2D
                 player.Heal(Item.MaxHealthBonus);
             }
 
+            player.Stats.ItemsCollected++;
+            player.NotifyStatsChanged();
+
             // Show floating label
             _nameLabel.Visible = true;
             _nameLabel.Position = new Vector2(-75, -70);

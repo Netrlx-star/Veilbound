@@ -22,6 +22,15 @@ public class PlayerStats
     public float ProjectileRange { get; set; } = 300.0f;
     public float Luck { get; set; } = 0.0f;
 
+    // ── Consumables ──
+    public int Coins { get; set; } = 0;
+    public int Bombs { get; set; } = 1;
+    public int Keys { get; set; } = 1;
+
+    // ── Run Statistics ──
+    public int EnemiesKilled { get; set; } = 0;
+    public int ItemsCollected { get; set; } = 0;
+
     // ── Knockback ──
     public float KnockbackForce { get; set; } = 150.0f;
 
@@ -38,6 +47,11 @@ public class PlayerStats
         ProjectileSpeed = 350.0f;
         ProjectileRange = 300.0f;
         Luck = 0.0f;
+        Coins = 0;
+        Bombs = 1;
+        Keys = 1;
+        EnemiesKilled = 0;
+        ItemsCollected = 0;
         KnockbackForce = 150.0f;
     }
 

@@ -28,6 +28,8 @@ public partial class PlayerController : CharacterBody2D
 
     // ── Signals ──
     [Signal] public delegate void HealthChangedEventHandler(int currentHealth, int maxHealth);
+    [Signal] public delegate void StatsChangedEventHandler();
+    [Signal] public delegate void ConsumablesChangedEventHandler(int coins, int bombs, int keys);
     [Signal] public delegate void PlayerDiedEventHandler();
 
     public override void _Ready()
@@ -43,6 +45,33 @@ public partial class PlayerController : CharacterBody2D
 
         Stats.Reset();
         EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
+        EmitSignal(SignalName.StatsChanged);
+        EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+    }
+
+    public void NotifyStatsChanged()
+    {
+        EmitSignal(SignalName.StatsChanged);
+        EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
+        EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+    }
+
+    public void AddCoins(int amount)
+    {
+        Stats.Coins += amount;
+        EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+    }
+
+    public void AddBombs(int amount)
+    {
+        Stats.Bombs += amount;
+        EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+    }
+
+    public void AddKeys(int amount)
+    {
+        Stats.Keys += amount;
+        EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -145,7 +174,6 @@ public partial class PlayerController : CharacterBody2D
 
         if (died)
         {
-            EmitSignal(SignalName.PlayerDied);
             OnDeath();
         }
     }
@@ -185,12 +213,19 @@ public partial class PlayerController : CharacterBody2D
         SetPhysicsProcess(false);
         _collisionShape.SetDeferred("disabled", true);
 
-        // Death delay then return to menu
-        var timer = GetTree().CreateTimer(1.5);
+        // Flash and collapse animation
+        if (_sprite != null)
+        {
+            var tween = CreateTween();
+            tween.TweenProperty(_sprite, "modulate:a", 0.3f, 0.5);
+            tween.Parallel().TweenProperty(_sprite, "scale", new Vector2(1.3f, 0.4f), 0.5);
+        }
+
+        // Slight dramatic pause before displaying the game over screen
+        var timer = GetTree().CreateTimer(0.8);
         timer.Timeout += () =>
         {
-            Systems.GameManager.Instance?.EndRun(false);
-            Systems.GameManager.Instance?.ReturnToMenu();
+            EmitSignal(SignalName.PlayerDied);
         };
     }
 }
