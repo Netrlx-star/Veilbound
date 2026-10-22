@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/HUD.cs" id="1_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/Minimap.tscn" id="2_minimap"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="3_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/GameOverScreen.tscn" id="4_gameover"]
 
 [node name="HUD" type="CanvasLayer"]
 layer = 10
@@ -24,7 +26,7 @@ theme_override_constants/margin_bottom = 10
 [node name="HeartsContainer" type="HBoxContainer" parent="TopBar/MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="Spacer" type="Control" parent="TopBar"]
 layout_mode = 2
@@ -37,7 +39,7 @@ theme_override_constants/separation = 4
 [node name="FloorLabel" type="Label" parent="TopBar/InfoContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_font_sizes/font_size = 16
 text = "Floor 1"
 horizontal_alignment = 2
@@ -45,7 +47,7 @@ horizontal_alignment = 2
 [node name="RoomsLabel" type="Label" parent="TopBar/InfoContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
 theme_override_font_sizes/font_size = 14
 text = "Rooms: 0"
 horizontal_alignment = 2
@@ -60,6 +62,109 @@ theme_override_constants/margin_bottom = 10
 [node name="Minimap" parent="TopBar/MinimapContainer" instance=ExtResource("2_minimap")]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="ConsumablesPanel" type="VBoxContainer" parent="."]
+offset_left = 18.0
+offset_top = 60.0
+offset_right = 90.0
+offset_bottom = 145.0
+theme_override_constants/separation = 4
+
+[node name="CoinRow" type="HBoxContainer" parent="ConsumablesPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CoinIcon" type="TextureRect" parent="ConsumablesPanel/CoinRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+stretch_mode = 3
+
+[node name="CoinLabel" type="Label" parent="ConsumablesPanel/CoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 13
+text = "00"
+
+[node name="BombRow" type="HBoxContainer" parent="ConsumablesPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BombIcon" type="TextureRect" parent="ConsumablesPanel/BombRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+stretch_mode = 3
+
+[node name="BombLabel" type="Label" parent="ConsumablesPanel/BombRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 13
+text = "01"
+
+[node name="KeyRow" type="HBoxContainer" parent="ConsumablesPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="KeyIcon" type="TextureRect" parent="ConsumablesPanel/KeyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+stretch_mode = 3
+
+[node name="KeyLabel" type="Label" parent="ConsumablesPanel/KeyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 13
+text = "01"
+
+[node name="FoundHudPanel" type="PanelContainer" parent="."]
+offset_left = 16.0
+offset_top = 220.0
+offset_right = 110.0
+offset_bottom = 320.0
+
+[node name="MarginContainer" type="MarginContainer" parent="FoundHudPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="VBoxContainer" type="VBoxContainer" parent="FoundHudPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="DamageLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+text = "DMG: 3.5"
+
+[node name="TearsLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "RATE: 2.5/s"
+
+[node name="SpeedLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "SPD: 1.00"
+
+[node name="RangeLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+text = "RNG: 300"
 
 [node name="BossBarContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
@@ -91,3 +196,11 @@ custom_minimum_size = Vector2(400, 16)
 layout_mode = 2
 value = 100.0
 show_percentage = false
+
+[node name="PauseMenu" parent="." instance=ExtResource("3_pause")]
+unique_name_in_owner = true
+visible = false
+
+[node name="GameOverScreen" parent="." instance=ExtResource("4_gameover")]
+unique_name_in_owner = true
+visible = false
