@@ -29,6 +29,7 @@ public partial class RoomManager : Node2D
     // ── Enemy scenes ──
     private PackedScene _flyEnemyScene;
     private PackedScene _chaserEnemyScene;
+    private PackedScene _shooterEnemyScene;
 
     // ── Player reference ──
     private Node2D _player;
@@ -37,6 +38,7 @@ public partial class RoomManager : Node2D
     {
         _flyEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/FlyEnemy.tscn");
         _chaserEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/ChaserEnemy.tscn");
+        _shooterEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/ShooterEnemy.tscn");
 
         GenerateFloor();
         EnterRoom(_currentRoomPos, "center");
@@ -182,7 +184,7 @@ public partial class RoomManager : Node2D
         switch (roomType)
         {
             case 1: // Normal room
-                var enemyScenes = new PackedScene[] { _flyEnemyScene, _chaserEnemyScene };
+                var enemyScenes = new PackedScene[] { _flyEnemyScene, _chaserEnemyScene, _shooterEnemyScene };
                 int enemyCount = (int)GD.RandRange(2, 5);
                 room.SpawnEnemies(enemyScenes, enemyCount);
                 break;
