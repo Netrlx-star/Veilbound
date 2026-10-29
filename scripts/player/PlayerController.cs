@@ -78,7 +78,25 @@ public partial class PlayerController : CharacterBody2D
     {
         HandleMovement(delta);
         HandleShooting(delta);
+        HandleBombPlacement();
         HandleInvincibility(delta);
+    }
+
+    private void HandleBombPlacement()
+    {
+        if (Input.IsActionJustPressed("place_bomb") && Stats.Bombs > 0)
+        {
+            Stats.Bombs--;
+            EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+
+            var bombScene = GD.Load<PackedScene>("res://scenes/items/BombEntity.tscn");
+            if (bombScene != null)
+            {
+                var bomb = bombScene.Instantiate<Node2D>();
+                bomb.GlobalPosition = GlobalPosition;
+                GetTree().CurrentScene.AddChild(bomb);
+            }
+        }
     }
 
     // ══════════════════════════════════════════════
