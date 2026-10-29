@@ -69,12 +69,15 @@ public partial class Room : Node2D
 
     private void BuildFloor()
     {
-        // Dark floor background
-        var floor = new ColorRect
+        AssetGenerator.InitializeAssets();
+
+        // Authentic tiled stone dungeon floor
+        var floor = new TextureRect
         {
-            Color = new Color(0.12f, 0.1f, 0.14f),
+            Texture = AssetGenerator.FloorTileTexture,
             Position = Vector2.Zero,
             Size = new Vector2(RoomWidth, RoomHeight),
+            StretchMode = TextureRect.StretchModeEnum.Tile,
             ZIndex = -10
         };
         AddChild(floor);
@@ -85,7 +88,7 @@ public partial class Room : Node2D
     {
         var wallColor = new Color(0.25f, 0.22f, 0.3f);
 
-        // Top wall (with gap for door if needed)
+        // Top wall
         if (HasTopDoor)
         {
             float doorStart = (RoomWidth - DoorWidth) / 2.0f;
@@ -144,14 +147,15 @@ public partial class Room : Node2D
         var collision = new CollisionShape2D { Shape = shape };
         wall.AddChild(collision);
 
-        // Visual
-        var rect = new ColorRect
+        // Masonry stone wall texture
+        var texture = new TextureRect
         {
-            Color = color,
+            Texture = AssetGenerator.WallTileTexture,
             Position = -size / 2.0f,
-            Size = size
+            Size = size,
+            StretchMode = TextureRect.StretchModeEnum.Tile
         };
-        wall.AddChild(rect);
+        wall.AddChild(texture);
 
         _wallsContainer.AddChild(wall);
     }
@@ -176,12 +180,13 @@ public partial class Room : Node2D
         var collision = new CollisionShape2D { Shape = shape };
         door.AddChild(collision);
 
-        // Door visual (simple colored rectangle)
-        var visual = new ColorRect
+        // Gothic door archway texture
+        var visual = new TextureRect
         {
-            Color = new Color(0.5f, 0.4f, 0.2f),
+            Texture = AssetGenerator.DoorFrameTexture,
             Position = new Vector2(-DoorWidth / 2, -DoorWidth / 2),
-            Size = new Vector2(DoorWidth, DoorWidth)
+            Size = new Vector2(DoorWidth, DoorWidth),
+            Modulate = new Color(0.5f, 0.9f, 0.5f)
         };
         door.AddChild(visual);
         visual.Name = "Visual";
@@ -199,6 +204,14 @@ public partial class Room : Node2D
 
         _doorsContainer.AddChild(door);
         _doors.Add(door);
+    }
+
+    /// <summary>
+    /// Applies an Isaac-style obstacle layout pattern (Rocks and Pots).
+    /// </summary>
+    public void SetObstacleLayout(Environments.RoomLayoutType type)
+    {
+        Environments.RoomLayoutGenerator.GenerateLayout(this, type);
     }
 
     // ══════════════════════════════════════════════
@@ -273,12 +286,12 @@ public partial class Room : Node2D
     {
         foreach (var door in _doors)
         {
-            var visual = door.GetNodeOrNull<ColorRect>("Visual");
+            var visual = door.GetNodeOrNull<TextureRect>("Visual");
             if (visual != null)
             {
-                visual.Color = locked
-                    ? new Color(0.6f, 0.2f, 0.2f)   // Red = locked
-                    : new Color(0.3f, 0.6f, 0.3f);    // Green = open
+                visual.Modulate = locked
+                    ? new Color(0.9f, 0.25f, 0.25f)   // Red = locked
+                    : new Color(0.45f, 0.95f, 0.5f);  // Green = open
             }
         }
     }

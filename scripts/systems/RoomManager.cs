@@ -236,6 +236,11 @@ public partial class RoomManager : Node2D
                 var enemyScenes = new PackedScene[] { _flyEnemyScene, _chaserEnemyScene, _shooterEnemyScene };
                 int enemyCount = (int)GD.RandRange(2, 5);
                 room.SpawnEnemies(enemyScenes, enemyCount);
+
+                // Varied Isaac-style room obstacle layout
+                var layouts = (Environments.RoomLayoutType[])System.Enum.GetValues(typeof(Environments.RoomLayoutType));
+                var randomLayout = layouts[GD.RandRange(0, layouts.Length - 1)];
+                room.SetObstacleLayout(randomLayout);
                 break;
 
             case 2: // Boss room
