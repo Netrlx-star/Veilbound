@@ -12,6 +12,7 @@ public partial class MainMenu : Control
     private Button _settingsButton;
     private Button _exitButton;
     private Label _titleLabel;
+    private SettingsMenu _settingsMenu;
 
     private float _titleTimer = 0.0f;
     private Vector2 _titleBasePos;
@@ -25,6 +26,7 @@ public partial class MainMenu : Control
         _settingsButton = GetNode<Button>("%SettingsButton");
         _exitButton = GetNode<Button>("%ExitButton");
         _titleLabel = GetNodeOrNull<Label>("%TitleLabel");
+        _settingsMenu = GetNodeOrNull<SettingsMenu>("%SettingsMenu");
 
         if (_titleLabel != null)
         {
@@ -92,7 +94,7 @@ public partial class MainMenu : Control
 
     private void OnSettingsPressed()
     {
-        GD.Print("Settings coming soon!");
+        _settingsMenu?.Open();
     }
 
     private void OnExitPressed()

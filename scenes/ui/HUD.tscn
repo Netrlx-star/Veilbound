@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/HUD.cs" id="1_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/Minimap.tscn" id="2_minimap"]
 [ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="3_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/GameOverScreen.tscn" id="4_gameover"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SettingsMenu.tscn" id="5_settings"]
 
 [node name="HUD" type="CanvasLayer"]
 layer = 10
@@ -121,50 +122,110 @@ theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
 theme_override_font_sizes/font_size = 13
 text = "01"
 
-[node name="FoundHudPanel" type="PanelContainer" parent="."]
-offset_left = 16.0
-offset_top = 220.0
-offset_right = 110.0
-offset_bottom = 320.0
+[node name="StatsDrawer" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+offset_left = -205.0
+offset_top = 180.0
+offset_right = 50.0
+offset_bottom = 440.0
 
-[node name="MarginContainer" type="MarginContainer" parent="FoundHudPanel"]
+[node name="DrawerPanel" type="PanelContainer" parent="StatsDrawer"]
+layout_mode = 0
+offset_right = 205.0
+offset_bottom = 260.0
+
+[node name="MarginContainer" type="MarginContainer" parent="StatsDrawer/DrawerPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 6
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="FoundHudPanel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="StatsDrawer/DrawerPanel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 
-[node name="DamageLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+[node name="StatsHeader" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 13
+text = "CHARACTER STATS"
+
+[node name="DamageLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 12
 text = "DMG: 3.5"
 
-[node name="TearsLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+[node name="TearsLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "RATE: 2.5/s"
 
-[node name="SpeedLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+[node name="SpeedLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 12
 text = "SPD: 1.00"
 
-[node name="RangeLabel" type="Label" parent="FoundHudPanel/MarginContainer/VBoxContainer"]
+[node name="RangeLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
 theme_override_font_sizes/font_size = 12
 text = "RNG: 300"
+
+[node name="HSeparator" type="HSeparator" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="GuideHeader" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 13
+text = "ACTIONS & KEYS"
+
+[node name="MoveGuideLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 11
+text = "Move: W/A/S/D"
+
+[node name="ShootGuideLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 11
+text = "Shoot: Arrow Keys"
+
+[node name="BombGuideLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 11
+text = "Bomb: E"
+
+[node name="OpenSettingsBtn" type="Button" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Change Keys..."
+
+[node name="DrawerTabButton" type="Button" parent="StatsDrawer"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 205.0
+offset_top = 10.0
+offset_right = 280.0
+offset_bottom = 44.0
+theme_override_font_sizes/font_size = 11
+text = "▶ STATS"
 
 [node name="BossBarContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
@@ -202,5 +263,9 @@ unique_name_in_owner = true
 visible = false
 
 [node name="GameOverScreen" parent="." instance=ExtResource("4_gameover")]
+unique_name_in_owner = true
+visible = false
+
+[node name="SettingsMenu" parent="." instance=ExtResource("5_settings")]
 unique_name_in_owner = true
 visible = false

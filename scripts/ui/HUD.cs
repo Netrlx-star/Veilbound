@@ -6,8 +6,8 @@ namespace Veilbound.UI;
 /// <summary>
 /// Advanced in-game HUD inspired by The Binding of Isaac.
 /// Displays modular pixel heart containers, low-health heartbeat pulsation,
-/// consumables (coins, bombs, keys), stat tracker (Found HUD), minimap,
-/// boss health bar, and pause/game-over overlays.
+/// consumables (coins, bombs, keys), retractable Character & Controls Drawer (Tab toggle),
+/// minimap, boss health bar, and pause/game-over overlays.
 /// </summary>
 public partial class HUD : CanvasLayer
 {
@@ -23,11 +23,23 @@ public partial class HUD : CanvasLayer
     private TextureRect _bombIcon;
     private TextureRect _keyIcon;
 
-    // ── Stat Tracker (Found HUD) ──
+    // ── Retractable Stats & Guide Drawer ──
+    private Control _statsDrawer;
+    private Button _drawerTabButton;
+    private bool _isDrawerOpen = false;
+    private Tween _drawerTween;
+
+    // ── Stat Tracker Labels ──
     private Label _damageLabel;
     private Label _tearsLabel;
     private Label _speedLabel;
     private Label _rangeLabel;
+
+    // ── Key Guide Labels ──
+    private Label _moveGuideLabel;
+    private Label _shootGuideLabel;
+    private Label _bombGuideLabel;
+    private Button _openSettingsBtn;
 
     // ── Floor & Rooms ──
     private Label _floorLabel;
@@ -44,6 +56,7 @@ public partial class HUD : CanvasLayer
     // ── Overlays ──
     private PauseMenu _pauseMenu;
     private GameOverScreen _gameOverScreen;
+    private SettingsMenu _settingsMenu;
 
     public override void _Ready()
     {
@@ -57,16 +70,31 @@ public partial class HUD : CanvasLayer
         _bombIcon = GetNodeOrNull<TextureRect>("%BombIcon");
         _keyIcon = GetNodeOrNull<TextureRect>("%KeyIcon");
 
-        // Initialize icons with procedural retro textures
         if (_coinIcon != null) _coinIcon.Texture = Systems.PlaceholderSprite.CreateCoinTexture();
         if (_bombIcon != null) _bombIcon.Texture = Systems.PlaceholderSprite.CreateBombTexture();
         if (_keyIcon != null) _keyIcon.Texture = Systems.PlaceholderSprite.CreateKeyTexture();
 
-        // Stat tracker
+        // Stats & Controls Drawer
+        _statsDrawer = GetNodeOrNull<Control>("%StatsDrawer");
+        _drawerTabButton = GetNodeOrNull<Button>("%DrawerTabButton");
         _damageLabel = GetNodeOrNull<Label>("%DamageLabel");
         _tearsLabel = GetNodeOrNull<Label>("%TearsLabel");
         _speedLabel = GetNodeOrNull<Label>("%SpeedLabel");
         _rangeLabel = GetNodeOrNull<Label>("%RangeLabel");
+        _moveGuideLabel = GetNodeOrNull<Label>("%MoveGuideLabel");
+        _shootGuideLabel = GetNodeOrNull<Label>("%ShootGuideLabel");
+        _bombGuideLabel = GetNodeOrNull<Label>("%BombGuideLabel");
+        _openSettingsBtn = GetNodeOrNull<Button>("%OpenSettingsBtn");
+
+        if (_drawerTabButton != null)
+        {
+            _drawerTabButton.Pressed += ToggleStatsDrawer;
+        }
+
+        if (_openSettingsBtn != null)
+        {
+            _openSettingsBtn.Pressed += () => _settingsMenu?.Open();
+        }
 
         // Floor info
         _floorLabel = GetNode<Label>("%FloorLabel");
@@ -82,23 +110,71 @@ public partial class HUD : CanvasLayer
         // Overlays
         _pauseMenu = GetNodeOrNull<PauseMenu>("%PauseMenu");
         _gameOverScreen = GetNodeOrNull<GameOverScreen>("%GameOverScreen");
+        _settingsMenu = GetNodeOrNull<SettingsMenu>("%SettingsMenu");
 
         UpdateFloorDisplay(1);
         UpdateRoomsDisplay(0);
         UpdateConsumables(0, 1, 1);
+        UpdateControlsGuide();
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (@event.IsActionPressed("toggle_stats"))
+        {
+            ToggleStatsDrawer();
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    //  RETRACTABLE STATS & CONTROLS DRAWER
+    // ══════════════════════════════════════════════
+
+    public void ToggleStatsDrawer()
+    {
+        if (_statsDrawer == null) return;
+        _isDrawerOpen = !_isDrawerOpen;
+
+        _drawerTween?.Kill();
+        _drawerTween = CreateTween().SetParallel(true);
+
+        float targetX = _isDrawerOpen ? 0.0f : -205.0f; // slides out or retracts
+        _drawerTween.TweenProperty(_statsDrawer, "position:x", targetX, 0.25)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+
+        if (_drawerTabButton != null)
+        {
+            _drawerTabButton.Text = _isDrawerOpen ? "◀" : "▶ STATS";
+        }
+
+        if (_isDrawerOpen)
+        {
+            UpdateControlsGuide();
+        }
+    }
+
+    private void UpdateControlsGuide()
+    {
+        var sm = Systems.SettingsManager.Instance;
+        if (sm == null) return;
+
+        if (_moveGuideLabel != null)
+            _moveGuideLabel.Text = $"Move: {sm.GetActionKeyName("move_up")}/{sm.GetActionKeyName("move_left")}/{sm.GetActionKeyName("move_down")}/{sm.GetActionKeyName("move_right")}";
+
+        if (_shootGuideLabel != null)
+            _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_up")}/{sm.GetActionKeyName("shoot_left")}/{sm.GetActionKeyName("shoot_down")}/{sm.GetActionKeyName("shoot_right")}";
+
+        if (_bombGuideLabel != null)
+            _bombGuideLabel.Text = $"Bomb: {sm.GetActionKeyName("place_bomb")}";
     }
 
     // ══════════════════════════════════════════════
     //  HEALTH SYSTEM
     // ══════════════════════════════════════════════
 
-    /// <summary>
-    /// Renders modular heart containers using authentic pixel textures.
-    /// Triggers low-health pulsation when at or below 1 full heart.
-    /// </summary>
     public void UpdateHearts(int currentHealth, int maxHealth)
     {
-        // Clear old hearts
         foreach (var child in _heartsContainer.GetChildren())
         {
             child.QueueFree();
@@ -126,7 +202,6 @@ public partial class HUD : CanvasLayer
             _heartsContainer.AddChild(heartRect);
         }
 
-        // Low health heartbeat effect
         HandleLowHealthPulsation(currentHealth);
     }
 
