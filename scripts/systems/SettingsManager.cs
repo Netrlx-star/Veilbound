@@ -3,6 +3,13 @@ using System;
 
 namespace Veilbound.Systems;
 
+public enum ShootingControlMode
+{
+    SingleButton = 0,   // Shoot with 1 button in walking direction
+    FourWay = 1,        // Shoot with 4 directional buttons
+    Hybrid = 2          // Both active simultaneously
+}
+
 /// <summary>
 /// Global Settings and Keybindings manager singleton.
 /// Handles audio volume (dB math), video modes (Fullscreen/VSync),
@@ -12,15 +19,21 @@ public partial class SettingsManager : Node
 {
     public static SettingsManager Instance { get; private set; }
 
+    [Signal] public delegate void ShootingModeChangedEventHandler(int mode);
+
     private const string ConfigPath = "user://settings.cfg";
     private readonly ConfigFile _config = new();
 
     public static readonly string[] ConfigurableActions = new[]
     {
         "move_up", "move_down", "move_left", "move_right",
+        "shoot_facing",
         "shoot_up", "shoot_down", "shoot_left", "shoot_right",
-        "place_bomb"
+        "place_bomb",
+        "toggle_stats"
     };
+
+    public ShootingControlMode ShootingMode { get; private set; } = ShootingControlMode.SingleButton;
 
     public override void _Ready()
     {
@@ -38,6 +51,9 @@ public partial class SettingsManager : Node
             SaveSettings();
             return;
         }
+
+        // Gameplay
+        ShootingMode = (ShootingControlMode)(long)_config.GetValue("Gameplay", "ShootingMode", (long)ShootingControlMode.SingleButton);
 
         // Audio
         SetBusVolume("Master", (float)_config.GetValue("Audio", "MasterVolume", 0.8f));
@@ -62,6 +78,20 @@ public partial class SettingsManager : Node
                 }
             }
         }
+
+        // Ensure shoot_facing is bound if not present
+        if (!InputMap.HasAction("shoot_facing") || GetActionKeycode("shoot_facing") == Key.None)
+        {
+            ApplyKeybind("shoot_facing", Key.Space, persist: false);
+        }
+    }
+
+    public void SetShootingMode(ShootingControlMode mode)
+    {
+        ShootingMode = mode;
+        _config.SetValue("Gameplay", "ShootingMode", (int)mode);
+        SaveSettings();
+        EmitSignal(SignalName.ShootingModeChanged, (int)mode);
     }
 
     public void SaveSettings()
@@ -71,11 +101,19 @@ public partial class SettingsManager : Node
 
     private void ApplyDefaults()
     {
+        ShootingMode = ShootingControlMode.SingleButton;
+        _config.SetValue("Gameplay", "ShootingMode", (int)ShootingControlMode.SingleButton);
+
         SetBusVolume("Master", 0.8f);
         SetBusVolume("SFX", 0.8f);
         SetBusVolume("Music", 0.7f);
         SetFullscreen(false);
         SetVSync(true);
+
+        if (!InputMap.HasAction("shoot_facing"))
+        {
+            ApplyKeybind("shoot_facing", Key.Space, persist: false);
+        }
     }
 
     // ── Audio ──

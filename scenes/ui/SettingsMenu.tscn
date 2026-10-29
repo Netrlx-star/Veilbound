@@ -135,6 +135,26 @@ layout_mode = 2
 button_pressed = true
 text = "Vertical Sync (VSync)"
 
+[node name="GameplayHeader" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 18
+text = "GAMEPLAY & CONTROLS"
+
+[node name="ShootingModeRow" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsContent"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsContent/ShootingModeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Shooting Control Mode"
+
+[node name="ShootingModeOption" type="OptionButton" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsContent/ShootingModeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 28)
+layout_mode = 2
+size_flags_vertical = 4
+
 [node name="ControlsHeader" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/SettingsContent"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.8, 0.4, 1)

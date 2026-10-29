@@ -15,6 +15,7 @@ public partial class SettingsMenu : Control
     private HSlider _musicSlider;
     private CheckBox _fullscreenCheck;
     private CheckBox _vsyncCheck;
+    private OptionButton _shootingModeOption;
     private VBoxContainer _keybindContainer;
     private Button _backButton;
 
@@ -32,10 +33,26 @@ public partial class SettingsMenu : Control
         _musicSlider = GetNode<HSlider>("%MusicSlider");
         _fullscreenCheck = GetNode<CheckBox>("%FullscreenCheck");
         _vsyncCheck = GetNode<CheckBox>("%VsyncCheck");
+        _shootingModeOption = GetNodeOrNull<OptionButton>("%ShootingModeOption");
         _keybindContainer = GetNode<VBoxContainer>("%KeybindContainer");
         _backButton = GetNode<Button>("%BackButton");
 
         var sm = SettingsManager.Instance;
+
+        if (_shootingModeOption != null)
+        {
+            _shootingModeOption.Clear();
+            _shootingModeOption.AddItem("1-Button (Walk Direction)", (int)ShootingControlMode.SingleButton);
+            _shootingModeOption.AddItem("4-Button (Arrow Keys)", (int)ShootingControlMode.FourWay);
+            _shootingModeOption.AddItem("Hybrid (Both Active)", (int)ShootingControlMode.Hybrid);
+
+            if (sm != null)
+            {
+                _shootingModeOption.Selected = (int)sm.ShootingMode;
+            }
+            _shootingModeOption.ItemSelected += idx => sm?.SetShootingMode((ShootingControlMode)idx);
+        }
+
         if (sm != null)
         {
             _masterSlider.Value = sm.GetBusVolume("Master");
@@ -144,10 +161,11 @@ public partial class SettingsMenu : Control
         "move_down" => "Move Down",
         "move_left" => "Move Left",
         "move_right" => "Move Right",
-        "shoot_up" => "Shoot Up (Arrow)",
-        "shoot_down" => "Shoot Down (Arrow)",
-        "shoot_left" => "Shoot Left (Arrow)",
-        "shoot_right" => "Shoot Right (Arrow)",
+        "shoot_facing" => "Shoot (Walk Dir / 1-Btn)",
+        "shoot_up" => "Shoot Up (4-Way)",
+        "shoot_down" => "Shoot Down (4-Way)",
+        "shoot_left" => "Shoot Left (4-Way)",
+        "shoot_right" => "Shoot Right (4-Way)",
         "place_bomb" => "Place Bomb",
         "toggle_stats" => "Toggle Stats & Guide",
         _ => action.Replace("_", " ")

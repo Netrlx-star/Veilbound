@@ -25,6 +25,7 @@ public partial class PlayerController : CharacterBody2D
     private AnimationPlayer _animationPlayer;
     private CollisionShape2D _collisionShape;
     private Node2D _projectileSpawnPoint;
+    private Vector2 _lastMoveDirection = Vector2.Right;
 
     // ── Signals ──
     [Signal] public delegate void HealthChangedEventHandler(int currentHealth, int maxHealth);
@@ -112,8 +113,12 @@ public partial class PlayerController : CharacterBody2D
         if (Input.IsActionPressed("move_left"))  inputDir.X -= 1;
         if (Input.IsActionPressed("move_right")) inputDir.X += 1;
 
-        inputDir = inputDir.Normalized();
-        Velocity = inputDir * Stats.MoveSpeed;
+        if (inputDir != Vector2.Zero)
+        {
+            _lastMoveDirection = inputDir.Normalized();
+        }
+
+        Velocity = inputDir.Normalized() * Stats.MoveSpeed;
 
         MoveAndSlide();
 
@@ -142,20 +147,43 @@ public partial class PlayerController : CharacterBody2D
 
     private Vector2 GetShootDirection()
     {
-        // Arrow keys for shooting — only allow one direction at a time (last pressed wins)
-        var dir = Vector2.Zero;
+        var sm = Systems.SettingsManager.Instance;
+        var mode = sm != null ? sm.ShootingMode : Systems.ShootingControlMode.SingleButton;
 
-        if (Input.IsActionPressed("shoot_up"))    dir = Vector2.Up;
-        if (Input.IsActionPressed("shoot_down"))  dir = Vector2.Down;
-        if (Input.IsActionPressed("shoot_left"))  dir = Vector2.Left;
-        if (Input.IsActionPressed("shoot_right")) dir = Vector2.Right;
+        // 1. Single-button shooting in walking/facing direction
+        if (mode == Systems.ShootingControlMode.SingleButton || mode == Systems.ShootingControlMode.Hybrid)
+        {
+            if (Input.IsActionPressed("shoot_facing"))
+            {
+                return _lastMoveDirection != Vector2.Zero ? _lastMoveDirection : Vector2.Right;
+            }
+        }
 
-        return dir;
+        // 2. 4-way independent shooting (Arrow keys or configured keys)
+        if (mode == Systems.ShootingControlMode.FourWay || mode == Systems.ShootingControlMode.Hybrid)
+        {
+            var dir = Vector2.Zero;
+
+            if (Input.IsActionPressed("shoot_up"))    dir = Vector2.Up;
+            if (Input.IsActionPressed("shoot_down"))  dir = Vector2.Down;
+            if (Input.IsActionPressed("shoot_left"))  dir = Vector2.Left;
+            if (Input.IsActionPressed("shoot_right")) dir = Vector2.Right;
+
+            if (dir != Vector2.Zero) return dir;
+        }
+
+        return Vector2.Zero;
     }
 
     private void Shoot(Vector2 direction)
     {
         if (_projectileScene == null) return;
+
+        // Flip sprite to face projectile direction if horizontal
+        if (direction.X != 0 && _sprite != null)
+        {
+            _sprite.FlipH = direction.X < 0;
+        }
 
         var projectile = _projectileScene.Instantiate<Projectile>();
         projectile.Direction = direction;

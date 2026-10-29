@@ -163,7 +163,21 @@ public partial class HUD : CanvasLayer
             _moveGuideLabel.Text = $"Move: {sm.GetActionKeyName("move_up")}/{sm.GetActionKeyName("move_left")}/{sm.GetActionKeyName("move_down")}/{sm.GetActionKeyName("move_right")}";
 
         if (_shootGuideLabel != null)
-            _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_up")}/{sm.GetActionKeyName("shoot_left")}/{sm.GetActionKeyName("shoot_down")}/{sm.GetActionKeyName("shoot_right")}";
+        {
+            var mode = sm.ShootingMode;
+            if (mode == Systems.ShootingControlMode.SingleButton)
+            {
+                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_facing")} (Walk Dir)";
+            }
+            else if (mode == Systems.ShootingControlMode.FourWay)
+            {
+                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_up")}/{sm.GetActionKeyName("shoot_left")}/{sm.GetActionKeyName("shoot_down")}/{sm.GetActionKeyName("shoot_right")}";
+            }
+            else // Hybrid
+            {
+                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_facing")} (Walk) or Arrows";
+            }
+        }
 
         if (_bombGuideLabel != null)
             _bombGuideLabel.Text = $"Bomb: {sm.GetActionKeyName("place_bomb")}";
