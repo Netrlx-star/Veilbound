@@ -3,11 +3,8 @@ using Godot;
 namespace Veilbound.Systems;
 
 /// <summary>
-/// Generates placeholder textures for sprites that don't have art yet.
-/// Attach this to any Node2D that has a Sprite2D child called "Sprite2D".
-/// It creates a simple colored rectangle texture at runtime.
-/// 
-/// This is temporary — remove once real art assets are in place.
+/// Generates and assigns authentic pixel-art textures.
+/// Automatically matches textures for Player, Enemies, Boss, and Obstacles.
 /// </summary>
 public partial class PlaceholderSprite : Node
 {
@@ -19,45 +16,22 @@ public partial class PlaceholderSprite : Node
         var sprite = GetParent().GetNodeOrNull<Sprite2D>("Sprite2D");
         if (sprite == null || sprite.Texture != null) return;
 
-        // Create a simple colored rectangle texture
-        var image = Image.CreateEmpty(SpriteSize.X, SpriteSize.Y, false, Image.Format.Rgba8);
-        image.Fill(SpriteColor);
+        AssetGenerator.InitializeAssets();
 
-        // Add a darker border (1px)
-        var borderColor = SpriteColor.Darkened(0.4f);
-        for (int x = 0; x < SpriteSize.X; x++)
+        string nodeName = GetParent().Name;
+        if (nodeName.Contains("Player")) sprite.Texture = AssetGenerator.PlayerTexture;
+        else if (nodeName.Contains("Fly")) sprite.Texture = AssetGenerator.FlyTexture;
+        else if (nodeName.Contains("Chaser")) sprite.Texture = AssetGenerator.ChaserTexture;
+        else if (nodeName.Contains("Shooter")) sprite.Texture = AssetGenerator.ShooterTexture;
+        else if (nodeName.Contains("Boss")) sprite.Texture = AssetGenerator.GoliathBossTexture;
+        else if (nodeName.Contains("Rock")) sprite.Texture = AssetGenerator.RockObstacleTexture;
+        else if (nodeName.Contains("Pot")) sprite.Texture = AssetGenerator.PotObstacleTexture;
+        else
         {
-            image.SetPixel(x, 0, borderColor);
-            image.SetPixel(x, SpriteSize.Y - 1, borderColor);
+            var image = Image.CreateEmpty(SpriteSize.X, SpriteSize.Y, false, Image.Format.Rgba8);
+            image.Fill(SpriteColor);
+            sprite.Texture = ImageTexture.CreateFromImage(image);
         }
-        for (int y = 0; y < SpriteSize.Y; y++)
-        {
-            image.SetPixel(0, y, borderColor);
-            image.SetPixel(SpriteSize.X - 1, y, borderColor);
-        }
-
-        // Add simple eyes (2 dots) for characters
-        if (SpriteSize.X >= 16 && SpriteSize.Y >= 16)
-        {
-            var eyeColor = Colors.White;
-            int eyeY = SpriteSize.Y / 3;
-            int eyeLeftX = SpriteSize.X / 3;
-            int eyeRightX = (SpriteSize.X * 2) / 3;
-
-            // Left eye
-            image.SetPixel(eyeLeftX, eyeY, eyeColor);
-            image.SetPixel(eyeLeftX + 1, eyeY, eyeColor);
-            image.SetPixel(eyeLeftX, eyeY + 1, eyeColor);
-            image.SetPixel(eyeLeftX + 1, eyeY + 1, eyeColor);
-
-            // Right eye
-            image.SetPixel(eyeRightX, eyeY, eyeColor);
-            image.SetPixel(eyeRightX + 1, eyeY, eyeColor);
-            image.SetPixel(eyeRightX, eyeY + 1, eyeColor);
-            image.SetPixel(eyeRightX + 1, eyeY + 1, eyeColor);
-        }
-
-        sprite.Texture = ImageTexture.CreateFromImage(image);
     }
 
     /// <summary>
@@ -95,8 +69,6 @@ public partial class PlaceholderSprite : Node
         var image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
         image.Fill(Colors.Transparent);
 
-        // Heart silhouette map (1 = interior, 2 = outline)
-        // 14 columns, 12 rows
         string[] map = {
             "..##.....##...",
             ".#..#...#..#..",
@@ -117,7 +89,6 @@ public partial class PlaceholderSprite : Node
         var emptyFill = new Color(0.2f, 0.1f, 0.12f, 0.4f);
         var shineColor = new Color(1.0f, 0.7f, 0.75f, 1.0f);
 
-        // Draw outline and fill based on scanlines
         for (int y = 0; y < height; y++)
         {
             string row = map[y];
@@ -126,9 +97,6 @@ public partial class PlaceholderSprite : Node
 
             if (firstHash != -1 && lastHash != -1)
             {
-                // Middle divider for the top dip
-                int midDip = (y < 3) ? row.IndexOf('#', firstHash + 1) : -1;
-
                 for (int x = 0; x < width; x++)
                 {
                     if (row[x] == '#')
@@ -137,16 +105,14 @@ public partial class PlaceholderSprite : Node
                     }
                     else if (x > firstHash && x < lastHash)
                     {
-                        // Check if within the heart lobes
                         if (y < 2 && (x == 5 || x == 6 || x == 7))
-                            continue; // transparent valley between lobes
+                            continue;
 
                         bool isLeftHalf = x <= width / 2;
                         bool shouldFill = state == 2 || (state == 1 && isLeftHalf);
 
                         if (shouldFill)
                         {
-                            // Specular highlight pixel on top-left
                             if (y == 2 && (x == 2 || x == 3))
                                 image.SetPixel(x, y, shineColor);
                             else
@@ -221,7 +187,6 @@ public partial class PlaceholderSprite : Node
             }
         }
 
-        // Fuse & spark
         image.SetPixel(6, 1, fuse);
         image.SetPixel(7, 0, spark);
         image.SetPixel(8, 0, new Color(1.0f, 0.8f, 0.2f));
@@ -241,7 +206,6 @@ public partial class PlaceholderSprite : Node
         var brass = new Color(0.9f, 0.75f, 0.25f);
         var darkBrass = new Color(0.55f, 0.45f, 0.15f);
 
-        // Key head loop
         for (int x = 2; x <= 7; x++)
         {
             for (int y = 1; y <= 5; y++)
@@ -251,14 +215,12 @@ public partial class PlaceholderSprite : Node
             }
         }
 
-        // Shaft
         for (int y = 6; y <= 12; y++)
         {
             image.SetPixel(4, y, brass);
             image.SetPixel(5, y, darkBrass);
         }
 
-        // Teeth
         image.SetPixel(6, 10, brass);
         image.SetPixel(7, 10, brass);
         image.SetPixel(6, 12, brass);
