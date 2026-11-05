@@ -40,17 +40,22 @@ public partial class RoomManager : Node2D
     [Signal] public delegate void BossDefeatedEventHandler();
 
     // ── Enemy scenes ──
+    private PackedScene _slimeEnemyScene;
     private PackedScene _flyEnemyScene;
     private PackedScene _chaserEnemyScene;
     private PackedScene _shooterEnemyScene;
     private PackedScene _bossScene;
     private PackedScene _trapdoorScene;
 
+    // ── Themes ──
+    private Dictionary<Vector2I, RoomThemeType> _roomThemes = new();
+
     // ── Player reference ──
     private Node2D _player;
 
     public override void _Ready()
     {
+        _slimeEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/SlimeEnemy.tscn");
         _flyEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/FlyEnemy.tscn");
         _chaserEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/ChaserEnemy.tscn");
         _shooterEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/ShooterEnemy.tscn");
@@ -68,11 +73,13 @@ public partial class RoomManager : Node2D
     private void GenerateFloor()
     {
         _grid = new int[GridSize, GridSize];
+        _roomThemes.Clear();
         var roomPositions = new List<Vector2I>();
 
         // Start room at center
         var start = new Vector2I(GridCenter, GridCenter);
         _grid[start.X, start.Y] = 1;
+        _roomThemes[start] = RoomThemeType.Dungeon;
         roomPositions.Add(start);
         _currentRoomPos = start;
 
@@ -87,10 +94,20 @@ public partial class RoomManager : Node2D
             var pos = candidates[idx];
             candidates.RemoveAt(idx);
 
-            // Don't add if it would create a 2x2 block (keeps layout more interesting)
-            if (CountAdjacentRooms(pos, roomPositions) <= 1)
+            // Allow natural branch connections (up to 3 neighbors) without dense 2x2 blocks
+            if (CountAdjacentRooms(pos, roomPositions) <= 3 && !WouldCreate2x2(pos, roomPositions))
             {
                 _grid[pos.X, pos.Y] = 1;
+
+                // Varied atmospheric themes
+                RoomThemeType[] availableThemes = {
+                    RoomThemeType.Dungeon,
+                    RoomThemeType.Spaceship,
+                    RoomThemeType.DesertTomb,
+                    RoomThemeType.SweetDessert
+                };
+                _roomThemes[pos] = availableThemes[GD.RandRange(0, availableThemes.Length - 1)];
+
                 roomPositions.Add(pos);
                 AddNeighborCandidates(pos, candidates, roomPositions);
             }
@@ -112,6 +129,7 @@ public partial class RoomManager : Node2D
         if (farthest != start)
         {
             _grid[farthest.X, farthest.Y] = 2; // Boss room
+            _roomThemes[farthest] = RoomThemeType.Dungeon;
         }
 
         // Place treasure room at another dead end
@@ -121,11 +139,22 @@ public partial class RoomManager : Node2D
             if (neighbors == 1 && pos != start && _grid[pos.X, pos.Y] == 1)
             {
                 _grid[pos.X, pos.Y] = 3; // Treasure room
+                _roomThemes[pos] = (GD.Randf() < 0.5f) ? RoomThemeType.SweetDessert : RoomThemeType.DesertTomb;
                 break;
             }
         }
 
         GD.Print($"Floor generated with {roomPositions.Count} rooms");
+    }
+
+    private bool WouldCreate2x2(Vector2I pos, List<Vector2I> rooms)
+    {
+        if (rooms.Contains(pos + Vector2I.Right) && rooms.Contains(pos + Vector2I.Up) && rooms.Contains(pos + Vector2I.Right + Vector2I.Up)) return true;
+        if (rooms.Contains(pos + Vector2I.Left) && rooms.Contains(pos + Vector2I.Up) && rooms.Contains(pos + Vector2I.Left + Vector2I.Up)) return true;
+        if (rooms.Contains(pos + Vector2I.Right) && rooms.Contains(pos + Vector2I.Down) && rooms.Contains(pos + Vector2I.Right + Vector2I.Down)) return true;
+        if (rooms.Contains(pos + Vector2I.Left) && rooms.Contains(pos + Vector2I.Down) && rooms.Contains(pos + Vector2I.Left + Vector2I.Down)) return true;
+
+        return false;
     }
 
     private void AddNeighborCandidates(Vector2I pos, List<Vector2I> candidates, List<Vector2I> existing)
@@ -168,8 +197,9 @@ public partial class RoomManager : Node2D
 
         _currentRoomPos = gridPos;
 
-        // Create new room
+        // Create new room with assigned theme
         var room = new Room();
+        room.Theme = _roomThemes.TryGetValue(gridPos, out var theme) ? theme : RoomThemeType.Dungeon;
 
         // Determine which doors exist based on neighboring rooms
         room.HasTopDoor    = HasRoomAt(gridPos + Vector2I.Up);
@@ -233,7 +263,12 @@ public partial class RoomManager : Node2D
         switch (roomType)
         {
             case 1: // Normal room
-                var enemyScenes = new PackedScene[] { _flyEnemyScene, _chaserEnemyScene, _shooterEnemyScene };
+                var enemyScenes = new PackedScene[] {
+                    _slimeEnemyScene,
+                    _flyEnemyScene,
+                    _chaserEnemyScene,
+                    _shooterEnemyScene
+                };
                 int enemyCount = (int)GD.RandRange(2, 5);
                 room.SpawnEnemies(enemyScenes, enemyCount);
 

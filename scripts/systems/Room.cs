@@ -4,9 +4,17 @@ using Veilbound.Enemies;
 
 namespace Veilbound.Systems;
 
+public enum RoomThemeType
+{
+    Dungeon,
+    Spaceship,
+    DesertTomb,
+    SweetDessert
+}
+
 /// <summary>
 /// Represents a single room in the dungeon. Handles walls, doors,
-/// enemy spawning, and room clearing logic.
+/// themed decorations, enemy spawning, and room clearing logic.
 /// 
 /// Room layout:
 ///   ┌────────[Top Door]────────┐
@@ -27,9 +35,13 @@ public partial class Room : Node2D
     public const float WallThickness = 64.0f;
     public const float DoorWidth = 80.0f;
 
+    // ── Theme & Decor ──
+    public RoomThemeType Theme { get; set; } = RoomThemeType.Dungeon;
+
     // ── Room state ──
     public bool IsCleared { get; private set; } = false;
     public int EnemiesRemaining { get; private set; } = 0;
+    private double _transitionCooldown = 0.35;
 
     // ── Door connections (null = no door on that side) ──
     public bool HasTopDoor { get; set; } = false;
@@ -42,6 +54,7 @@ public partial class Room : Node2D
     private List<Area2D> _doors = new();
     private Node2D _wallsContainer;
     private Node2D _doorsContainer;
+    private Node2D _decorContainer;
     private Node2D _enemiesContainer;
 
     // ── Signals ──
@@ -52,15 +65,43 @@ public partial class Room : Node2D
     {
         _wallsContainer = new Node2D { Name = "Walls" };
         _doorsContainer = new Node2D { Name = "Doors" };
+        _decorContainer = new Node2D { Name = "Decorations" };
         _enemiesContainer = new Node2D { Name = "Enemies" };
 
         AddChild(_wallsContainer);
         AddChild(_doorsContainer);
+        AddChild(_decorContainer);
         AddChild(_enemiesContainer);
 
         BuildWalls();
         BuildDoors();
         BuildFloor();
+        BuildDecorations();
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        if (_transitionCooldown > 0)
+        {
+            _transitionCooldown -= delta;
+            return;
+        }
+
+        if (!IsCleared) return;
+
+        // Active overlap check so player never gets stuck in doorways
+        foreach (var door in _doors)
+        {
+            foreach (var body in door.GetOverlappingBodies())
+            {
+                if (body.IsInGroup("player"))
+                {
+                    _transitionCooldown = 0.5;
+                    EmitSignal(SignalName.DoorEntered, (string)door.GetMeta("direction"));
+                    return;
+                }
+            }
+        }
     }
 
     // ══════════════════════════════════════════════
@@ -71,10 +112,17 @@ public partial class Room : Node2D
     {
         AssetGenerator.InitializeAssets();
 
-        // Authentic tiled stone dungeon floor
+        Texture2D floorTex = Theme switch
+        {
+            RoomThemeType.Spaceship => AssetGenerator.SpaceshipFloorTexture,
+            RoomThemeType.DesertTomb => AssetGenerator.DesertFloorTexture,
+            RoomThemeType.SweetDessert => AssetGenerator.DessertFloorTexture,
+            _ => AssetGenerator.FloorTileTexture
+        };
+
         var floor = new TextureRect
         {
-            Texture = AssetGenerator.FloorTileTexture,
+            Texture = floorTex,
             Position = Vector2.Zero,
             Size = new Vector2(RoomWidth, RoomHeight),
             StretchMode = TextureRect.StretchModeEnum.Tile,
@@ -82,6 +130,44 @@ public partial class Room : Node2D
         };
         AddChild(floor);
         MoveChild(floor, 0);
+    }
+
+    private void BuildDecorations()
+    {
+        Texture2D mainDecal = Theme switch
+        {
+            RoomThemeType.Spaceship => AssetGenerator.DecalTechTexture,
+            RoomThemeType.DesertTomb => AssetGenerator.DecalSandTexture,
+            RoomThemeType.SweetDessert => AssetGenerator.DecalCandyTexture,
+            _ => AssetGenerator.DecalRuneTexture
+        };
+
+        Texture2D secondaryDecal = Theme switch
+        {
+            RoomThemeType.SweetDessert => AssetGenerator.DecalCandyTexture,
+            RoomThemeType.DesertTomb => AssetGenerator.DecalSandTexture,
+            RoomThemeType.Spaceship => AssetGenerator.DecalTechTexture,
+            _ => AssetGenerator.DecalBloodTexture
+        };
+
+        // Scatter 4-7 ambient floor decals across room
+        int count = GD.RandRange(4, 7);
+        for (int i = 0; i < count; i++)
+        {
+            var decalTex = (i % 2 == 0) ? mainDecal : secondaryDecal;
+            var decalRect = new TextureRect
+            {
+                Texture = decalTex,
+                Position = new Vector2(
+                    (float)GD.RandRange(WallThickness + 60, RoomWidth - WallThickness - 120),
+                    (float)GD.RandRange(WallThickness + 60, RoomHeight - WallThickness - 120)
+                ),
+                Modulate = new Color(1, 1, 1, (float)GD.RandRange(0.6, 0.95)),
+                ZIndex = -5,
+                MouseFilter = Control.MouseFilterEnum.Ignore
+            };
+            _decorContainer.AddChild(decalRect);
+        }
     }
 
     private void BuildWalls()
@@ -147,10 +233,17 @@ public partial class Room : Node2D
         var collision = new CollisionShape2D { Shape = shape };
         wall.AddChild(collision);
 
-        // Masonry stone wall texture
+        Texture2D wallTex = Theme switch
+        {
+            RoomThemeType.Spaceship => AssetGenerator.SpaceshipWallTexture,
+            RoomThemeType.DesertTomb => AssetGenerator.DesertWallTexture,
+            RoomThemeType.SweetDessert => AssetGenerator.DessertWallTexture,
+            _ => AssetGenerator.WallTileTexture
+        };
+
         var texture = new TextureRect
         {
-            Texture = AssetGenerator.WallTileTexture,
+            Texture = wallTex,
             Position = -size / 2.0f,
             Size = size,
             StretchMode = TextureRect.StretchModeEnum.Tile
@@ -168,15 +261,38 @@ public partial class Room : Node2D
         if (HasRightDoor)  CreateDoor("right",  new Vector2(RoomWidth - WallThickness / 2, RoomHeight / 2), "right");
     }
 
-    private void CreateDoor(string name, Vector2 position, string direction)
+    private void CreateDoor(string name, Vector2 visualPosition, string direction)
     {
         var door = new Area2D();
         door.Name = $"Door_{name}";
-        door.Position = position;
         door.CollisionLayer = 64; // doors layer (bit 7)
         door.CollisionMask = 2;   // detect player (bit 2)
 
-        var shape = new RectangleShape2D { Size = new Vector2(DoorWidth, DoorWidth) };
+        // Calculate generous trigger area extending safely into room
+        Vector2 triggerPos = visualPosition;
+        Vector2 triggerSize = new Vector2(DoorWidth + 24, DoorWidth + 30);
+
+        switch (direction)
+        {
+            case "top":
+                triggerPos.Y += 15.0f;
+                break;
+            case "bottom":
+                triggerPos.Y -= 15.0f;
+                break;
+            case "left":
+                triggerPos.X += 15.0f;
+                triggerSize = new Vector2(DoorWidth + 30, DoorWidth + 24);
+                break;
+            case "right":
+                triggerPos.X -= 15.0f;
+                triggerSize = new Vector2(DoorWidth + 30, DoorWidth + 24);
+                break;
+        }
+
+        door.Position = triggerPos;
+
+        var shape = new RectangleShape2D { Size = triggerSize };
         var collision = new CollisionShape2D { Shape = shape };
         door.AddChild(collision);
 
@@ -184,7 +300,7 @@ public partial class Room : Node2D
         var visual = new TextureRect
         {
             Texture = AssetGenerator.DoorFrameTexture,
-            Position = new Vector2(-DoorWidth / 2, -DoorWidth / 2),
+            Position = visualPosition - triggerPos - new Vector2(DoorWidth / 2, DoorWidth / 2),
             Size = new Vector2(DoorWidth, DoorWidth),
             Modulate = new Color(0.5f, 0.9f, 0.5f)
         };
@@ -196,8 +312,9 @@ public partial class Room : Node2D
 
         door.BodyEntered += (body) =>
         {
-            if (body.IsInGroup("player") && IsCleared)
+            if (body.IsInGroup("player") && IsCleared && _transitionCooldown <= 0)
             {
+                _transitionCooldown = 0.5;
                 EmitSignal(SignalName.DoorEntered, direction);
             }
         };
@@ -301,7 +418,7 @@ public partial class Room : Node2D
     /// </summary>
     public Vector2 GetPlayerSpawnPosition(string fromDirection)
     {
-        float margin = WallThickness + 30.0f;
+        float margin = WallThickness + 55.0f;
 
         return fromDirection switch
         {
