@@ -46,6 +46,25 @@ public partial class PlayerController : CharacterBody2D
         _projectileSpawnPoint = GetNodeOrNull<Node2D>("ProjectileSpawnPoint");
 
         Stats.Reset();
+
+        // Apply character class specific archetype
+        var charClass = Systems.GameManager.Instance?.SelectedClass ?? Systems.PlayerClass.Wanderer;
+        if (charClass == Systems.PlayerClass.Bladesmith)
+        {
+            if (_sprite != null)
+            {
+                Systems.AssetGenerator.InitializeAssets();
+                _sprite.Texture = Systems.AssetGenerator.KnightTexture;
+            }
+
+            Stats.MaxHealth = 8;       // 4 Red Hearts
+            Stats.CurrentHealth = 8;
+            Stats.Damage = 7.0f;       // High melee blade damage
+            Stats.FireRate = 0.30f;     // Responsive slash interval
+            Stats.MoveSpeed = 215.0f;
+            Stats.KnockbackForce = 280.0f;
+        }
+
         EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
         EmitSignal(SignalName.StatsChanged);
         EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
@@ -174,9 +193,38 @@ public partial class PlayerController : CharacterBody2D
         var shootDir = GetShootDirection();
         if (shootDir != Vector2.Zero && _shootCooldown <= 0)
         {
-            Shoot(shootDir);
+            var charClass = Systems.GameManager.Instance?.SelectedClass ?? Systems.PlayerClass.Wanderer;
+            if (charClass == Systems.PlayerClass.Bladesmith)
+            {
+                SlashSword(shootDir);
+            }
+            else
+            {
+                Shoot(shootDir);
+            }
+
             _shootCooldown = Stats.FireRate;
         }
+    }
+
+    private void SlashSword(Vector2 direction)
+    {
+        if (direction.X != 0 && _sprite != null)
+        {
+            _sprite.FlipH = direction.X < 0;
+        }
+
+        var slash = new SwordSlashArc
+        {
+            SlashDirection = direction,
+            Damage = Stats.Damage,
+            KnockbackForce = Stats.KnockbackForce,
+            GlobalPosition = GlobalPosition + direction * 16.0f
+        };
+        GetTree().CurrentScene.AddChild(slash);
+
+        // Subtle thrust impulse forward with the swing
+        Velocity += direction * 70.0f;
     }
 
     private Vector2 GetShootDirection()

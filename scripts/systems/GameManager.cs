@@ -2,6 +2,12 @@ using Godot;
 
 namespace Veilbound.Systems;
 
+public enum PlayerClass
+{
+    Wanderer,   // Ranged tears
+    Bladesmith  // Melee sword slash
+}
+
 /// <summary>
 /// Global game manager autoload. Handles game state, scene transitions,
 /// and run-level data persistence.
@@ -9,6 +15,9 @@ namespace Veilbound.Systems;
 public partial class GameManager : Node
 {
     public static GameManager Instance { get; private set; }
+
+    // ── Character Selection ──
+    public PlayerClass SelectedClass { get; set; } = PlayerClass.Wanderer;
 
     // ── Current run stats ──
     public int CurrentFloor { get; set; } = 1;

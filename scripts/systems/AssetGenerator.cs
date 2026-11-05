@@ -13,6 +13,7 @@ public static class AssetGenerator
 
     // Cached textures
     public static Texture2D PlayerTexture { get; private set; }
+    public static Texture2D KnightTexture { get; private set; }
     public static Texture2D FlyTexture { get; private set; }
     public static Texture2D ChaserTexture { get; private set; }
     public static Texture2D ShooterTexture { get; private set; }
@@ -51,6 +52,7 @@ public static class AssetGenerator
         _initialized = true;
 
         PlayerTexture = GenerateAndSave("res://assets/characters/player.png", BuildPlayerSprite(32, 32));
+        KnightTexture = GenerateAndSave("res://assets/characters/knight.png", BuildKnightSprite(32, 32));
         FlyTexture = GenerateAndSave("res://assets/enemies/fly.png", BuildFlySprite(24, 24));
         ChaserTexture = GenerateAndSave("res://assets/enemies/chaser.png", BuildChaserSprite(32, 32));
         ShooterTexture = GenerateAndSave("res://assets/enemies/shooter.png", BuildShooterSprite(32, 32));
@@ -178,6 +180,90 @@ public static class AssetGenerator
             img.SetPixel(x, 22, beltColor);
         }
         img.SetPixel(15, 22, new Color(0.9f, 0.8f, 0.3f)); // belt buckle
+
+        AddDarkOutline(img, darkOutline);
+        return img;
+    }
+
+    // ══════════════════════════════════════════════
+    //  1B. MELEE CHARACTER (Bladesmith Knight)
+    // ══════════════════════════════════════════════
+    private static Image BuildKnightSprite(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+
+        var darkOutline = new Color(0.10f, 0.10f, 0.14f);
+        var armorMain = new Color(0.48f, 0.52f, 0.58f);
+        var armorHighlight = new Color(0.72f, 0.76f, 0.84f);
+        var armorShadow = new Color(0.26f, 0.28f, 0.34f);
+        var visorEmber = new Color(1.0f, 0.35f, 0.20f);
+        var visorShine = new Color(1.0f, 0.85f, 0.40f);
+        var capeRed = new Color(0.72f, 0.15f, 0.22f);
+        var goldTrim = new Color(0.92f, 0.78f, 0.25f);
+        var bladeSteel = new Color(0.85f, 0.90f, 0.98f);
+
+        // Crimson Cape / Tabard (Y: 15 to 28, X: 7 to 24)
+        for (int y = 15; y <= 28; y++)
+        {
+            for (int x = 7; x <= 24; x++)
+            {
+                if (x <= 9 || x >= 22 || y >= 25)
+                {
+                    img.SetPixel(x, y, capeRed);
+                }
+            }
+        }
+
+        // Steel Cuirass (Breastplate) (Y: 15 to 26, X: 10 to 21)
+        for (int y = 15; y <= 26; y++)
+        {
+            for (int x = 10; x <= 21; x++)
+            {
+                if (x <= 12) img.SetPixel(x, y, armorHighlight);
+                else if (x >= 19) img.SetPixel(x, y, armorShadow);
+                else img.SetPixel(x, y, armorMain);
+            }
+        }
+
+        // Golden Trim Belt
+        for (int x = 10; x <= 21; x++)
+        {
+            img.SetPixel(x, 23, goldTrim);
+        }
+
+        // Great Helmet (Y: 4 to 15, X: 8 to 23)
+        for (int y = 4; y <= 15; y++)
+        {
+            for (int x = 8; x <= 23; x++)
+            {
+                float dx = (x - 15.5f) / 7.5f;
+                float dy = (y - 9.5f) / 5.5f;
+                if (dx * dx + dy * dy <= 1.0f)
+                {
+                    if (x <= 11) img.SetPixel(x, y, armorHighlight);
+                    else if (x >= 20) img.SetPixel(x, y, armorShadow);
+                    else img.SetPixel(x, y, armorMain);
+                }
+            }
+        }
+
+        // Helmet Visor Slit with burning ember glow (Y: 10 to 11, X: 11 to 20)
+        for (int x = 11; x <= 20; x++)
+        {
+            img.SetPixel(x, 10, darkOutline);
+            img.SetPixel(x, 11, visorEmber);
+        }
+        img.SetPixel(13, 11, visorShine);
+        img.SetPixel(17, 11, visorShine);
+
+        // Sword on back (diagonal blade)
+        img.SetPixel(23, 5, goldTrim);  // Pommel
+        img.SetPixel(22, 6, goldTrim);  // Crossguard
+        img.SetPixel(24, 6, goldTrim);
+        img.SetPixel(21, 7, bladeSteel);
+        img.SetPixel(20, 8, bladeSteel);
+        img.SetPixel(19, 9, bladeSteel);
 
         AddDarkOutline(img, darkOutline);
         return img;

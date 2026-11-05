@@ -9,6 +9,7 @@ namespace Veilbound.UI;
 public partial class MainMenu : Control
 {
     private Button _playButton;
+    private Button _characterSelectBtn;
     private Button _settingsButton;
     private Button _exitButton;
     private Label _titleLabel;
@@ -23,6 +24,7 @@ public partial class MainMenu : Control
     public override void _Ready()
     {
         _playButton = GetNode<Button>("%PlayButton");
+        _characterSelectBtn = GetNodeOrNull<Button>("%CharacterSelectBtn");
         _settingsButton = GetNode<Button>("%SettingsButton");
         _exitButton = GetNode<Button>("%ExitButton");
         _titleLabel = GetNodeOrNull<Label>("%TitleLabel");
@@ -36,6 +38,13 @@ public partial class MainMenu : Control
         _playButton.Pressed += OnPlayPressed;
         _settingsButton.Pressed += OnSettingsPressed;
         _exitButton.Pressed += OnExitPressed;
+
+        if (_characterSelectBtn != null)
+        {
+            UpdateCharacterSelectButtonText();
+            _characterSelectBtn.Pressed += OnCharacterSelectPressed;
+            SetupButtonHoverEffects(_characterSelectBtn);
+        }
 
         SetupButtonHoverEffects(_playButton);
         SetupButtonHoverEffects(_settingsButton);
@@ -85,6 +94,29 @@ public partial class MainMenu : Control
                 .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
             tween.TweenProperty(button, "modulate", DefaultButtonColor, 0.15);
         }
+    }
+
+    private void OnCharacterSelectPressed()
+    {
+        var gm = Systems.GameManager.Instance;
+        if (gm == null) return;
+
+        gm.SelectedClass = (gm.SelectedClass == Systems.PlayerClass.Wanderer)
+            ? Systems.PlayerClass.Bladesmith
+            : Systems.PlayerClass.Wanderer;
+
+        UpdateCharacterSelectButtonText();
+    }
+
+    private void UpdateCharacterSelectButtonText()
+    {
+        if (_characterSelectBtn == null) return;
+        var gm = Systems.GameManager.Instance;
+        bool isBladesmith = gm?.SelectedClass == Systems.PlayerClass.Bladesmith;
+
+        _characterSelectBtn.Text = isBladesmith
+            ? "Class: ⚔️ Bladesmith (Melee)"
+            : "Class: 🏹 Wanderer (Ranged)";
     }
 
     private void OnPlayPressed()
