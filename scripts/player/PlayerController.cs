@@ -26,6 +26,7 @@ public partial class PlayerController : CharacterBody2D
     private CollisionShape2D _collisionShape;
     private Node2D _projectileSpawnPoint;
     private Vector2 _lastMoveDirection = Vector2.Right;
+    private float _walkTimer = 0.0f;
 
     // ── Signals ──
     [Signal] public delegate void HealthChangedEventHandler(int currentHealth, int maxHealth);
@@ -126,6 +127,39 @@ public partial class PlayerController : CharacterBody2D
         if (inputDir.X != 0 && _sprite != null)
         {
             _sprite.FlipH = inputDir.X < 0;
+        }
+
+        AnimateWalk(delta, inputDir);
+    }
+
+    private void AnimateWalk(double delta, Vector2 inputDir)
+    {
+        if (_sprite == null) return;
+
+        if (inputDir != Vector2.Zero)
+        {
+            // Organic Isaac-style step cadence
+            _walkTimer += (float)delta * (Stats.MoveSpeed / 16.0f);
+
+            // Subtle body tilt swaying with steps
+            _sprite.Rotation = Mathf.Sin(_walkTimer) * 0.12f;
+
+            // Rhythmic vertical step bounce
+            float bounceY = -Mathf.Abs(Mathf.Sin(_walkTimer)) * 3.5f;
+            _sprite.Position = new Vector2(0, bounceY);
+
+            // Subtle squash-and-stretch step compression
+            float squashX = 1.0f + Mathf.Cos(_walkTimer * 2.0f) * 0.04f;
+            float squashY = 1.0f - Mathf.Cos(_walkTimer * 2.0f) * 0.04f;
+            _sprite.Scale = new Vector2(squashX, squashY);
+        }
+        else
+        {
+            // Smoothly ease back to neutral idle
+            _walkTimer = 0.0f;
+            _sprite.Rotation = Mathf.Lerp(_sprite.Rotation, 0.0f, (float)delta * 14.0f);
+            _sprite.Position = _sprite.Position.Lerp(Vector2.Zero, (float)delta * 14.0f);
+            _sprite.Scale = _sprite.Scale.Lerp(Vector2.One, (float)delta * 14.0f);
         }
     }
 
