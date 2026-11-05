@@ -136,15 +136,17 @@ public partial class BaseEnemy : CharacterBody2D
             }
         }
 
-        // 25% chance to drop a healing heart upon death
-        if (GD.Randf() < 0.25f)
+        // 35% base chance (increased to 50% if player is injured) to drop a healing heart
+        float heartDropChance = (player != null && player.Stats.CurrentHealth < player.Stats.MaxHealth) ? 0.50f : 0.35f;
+        if (GD.Randf() < heartDropChance)
         {
             var heartScene = GD.Load<PackedScene>("res://scenes/items/HeartPickup.tscn");
             if (heartScene != null)
             {
-                var heart = heartScene.Instantiate<Node2D>();
-                heart.GlobalPosition = GlobalPosition;
-                GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, heart);
+                var heart = heartScene.Instantiate<Items.HeartPickup>();
+                var targetParent = GetParent() ?? (Node)GetTree().CurrentScene;
+                targetParent.CallDeferred(Node.MethodName.AddChild, heart);
+                heart.CallDeferred(nameof(Items.HeartPickup.Initialize), GlobalPosition);
             }
         }
 
