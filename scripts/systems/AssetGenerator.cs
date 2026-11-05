@@ -16,9 +16,30 @@ public static class AssetGenerator
     public static Texture2D FlyTexture { get; private set; }
     public static Texture2D ChaserTexture { get; private set; }
     public static Texture2D ShooterTexture { get; private set; }
+    public static Texture2D SlimeTexture { get; private set; }
     public static Texture2D GoliathBossTexture { get; private set; }
+
+    // Themes
     public static Texture2D FloorTileTexture { get; private set; }
     public static Texture2D WallTileTexture { get; private set; }
+
+    public static Texture2D SpaceshipFloorTexture { get; private set; }
+    public static Texture2D SpaceshipWallTexture { get; private set; }
+
+    public static Texture2D DesertFloorTexture { get; private set; }
+    public static Texture2D DesertWallTexture { get; private set; }
+
+    public static Texture2D DessertFloorTexture { get; private set; }
+    public static Texture2D DessertWallTexture { get; private set; }
+
+    // Decals
+    public static Texture2D DecalRuneTexture { get; private set; }
+    public static Texture2D DecalTechTexture { get; private set; }
+    public static Texture2D DecalSandTexture { get; private set; }
+    public static Texture2D DecalCandyTexture { get; private set; }
+    public static Texture2D DecalBloodTexture { get; private set; }
+
+    // Obstacles & Items
     public static Texture2D RockObstacleTexture { get; private set; }
     public static Texture2D PotObstacleTexture { get; private set; }
     public static Texture2D DoorFrameTexture { get; private set; }
@@ -33,10 +54,27 @@ public static class AssetGenerator
         FlyTexture = GenerateAndSave("res://assets/enemies/fly.png", BuildFlySprite(24, 24));
         ChaserTexture = GenerateAndSave("res://assets/enemies/chaser.png", BuildChaserSprite(32, 32));
         ShooterTexture = GenerateAndSave("res://assets/enemies/shooter.png", BuildShooterSprite(32, 32));
+        SlimeTexture = GenerateAndSave("res://assets/enemies/slime.png", BuildSlimeSprite(28, 24));
         GoliathBossTexture = GenerateAndSave("res://assets/bosses/goliath.png", BuildGoliathSprite(64, 64));
 
         FloorTileTexture = GenerateAndSave("res://assets/environments/floor_tile.png", BuildFloorTexture(64, 64));
         WallTileTexture = GenerateAndSave("res://assets/environments/wall_stone.png", BuildWallTexture(64, 64));
+
+        SpaceshipFloorTexture = GenerateAndSave("res://assets/environments/floor_spaceship.png", BuildSpaceshipFloor(64, 64));
+        SpaceshipWallTexture = GenerateAndSave("res://assets/environments/wall_spaceship.png", BuildSpaceshipWall(64, 64));
+
+        DesertFloorTexture = GenerateAndSave("res://assets/environments/floor_desert.png", BuildDesertFloor(64, 64));
+        DesertWallTexture = GenerateAndSave("res://assets/environments/wall_desert.png", BuildDesertWall(64, 64));
+
+        DessertFloorTexture = GenerateAndSave("res://assets/environments/floor_dessert.png", BuildDessertFloor(64, 64));
+        DessertWallTexture = GenerateAndSave("res://assets/environments/wall_dessert.png", BuildDessertWall(64, 64));
+
+        DecalRuneTexture = GenerateAndSave("res://assets/environments/decal_rune.png", BuildRuneDecal(64, 64));
+        DecalTechTexture = GenerateAndSave("res://assets/environments/decal_tech.png", BuildTechDecal(64, 64));
+        DecalSandTexture = GenerateAndSave("res://assets/environments/decal_sand.png", BuildSandDecal(48, 48));
+        DecalCandyTexture = GenerateAndSave("res://assets/environments/decal_candy.png", BuildCandyDecal(48, 48));
+        DecalBloodTexture = GenerateAndSave("res://assets/environments/decal_blood.png", BuildBloodDecal(32, 32));
+
         RockObstacleTexture = GenerateAndSave("res://assets/environments/rock.png", BuildRockTexture(32, 32));
         PotObstacleTexture = GenerateAndSave("res://assets/environments/pot.png", BuildPotTexture(32, 32));
         DoorFrameTexture = GenerateAndSave("res://assets/environments/door_frame.png", BuildDoorTexture(80, 80));
@@ -324,7 +362,86 @@ public static class AssetGenerator
     }
 
     // ══════════════════════════════════════════════
-    //  5. GOLIATH BOSS (Monstro-Inspired Colossus)
+    //  5. CRIMSON SLIME ENEMY (Gelatinous Blob)
+    // ══════════════════════════════════════════════
+    private static Image BuildSlimeSprite(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+
+        var dark = new Color(0.24f, 0.04f, 0.08f);
+        var slimeRuby = new Color(0.92f, 0.18f, 0.28f);
+        var slimeDark = new Color(0.65f, 0.10f, 0.18f);
+        var slimeHighlight = new Color(1.0f, 0.50f, 0.60f);
+        var shineWhite = new Color(1.0f, 0.90f, 0.95f);
+        var nucleusGlow = new Color(1.0f, 0.70f, 0.20f);
+        var eyeColor = new Color(1.0f, 1.0f, 1.0f);
+        var pupilColor = new Color(0.12f, 0.02f, 0.04f);
+
+        // Gelatinous dome (w=28, h=24)
+        for (int y = 4; y <= 21; y++)
+        {
+            for (int x = 2; x <= 25; x++)
+            {
+                // Oval squished at bottom
+                float dx = (x - 13.5f) / 10.5f;
+                float dy = (y - 14.5f) / (y < 14 ? 9.5f : 6.5f);
+                if (dx * dx + dy * dy <= 1.0f)
+                {
+                    if (y >= 18 || (x > 18 && y > 12)) img.SetPixel(x, y, slimeDark);
+                    else if (x <= 8 && y <= 10) img.SetPixel(x, y, slimeHighlight);
+                    else img.SetPixel(x, y, slimeRuby);
+                }
+            }
+        }
+
+        // Internal glowing core / nucleus
+        for (int y = 13; y <= 16; y++)
+        {
+            for (int x = 12; x <= 16; x++)
+            {
+                float dx = (x - 14.0f) / 1.8f;
+                float dy = (y - 14.5f) / 1.5f;
+                if (dx * dx + dy * dy <= 1.0f)
+                {
+                    img.SetPixel(x, y, nucleusGlow);
+                }
+            }
+        }
+
+        // Specular glossy curves on upper-left
+        img.SetPixel(6, 7, shineWhite);
+        img.SetPixel(7, 7, shineWhite);
+        img.SetPixel(8, 6, shineWhite);
+        img.SetPixel(9, 6, shineWhite);
+        img.SetPixel(10, 6, shineWhite);
+        img.SetPixel(6, 8, slimeHighlight);
+
+        // Cute/fierce Isaac-style eyes
+        // Left eye
+        for (int y = 10; y <= 13; y++)
+        {
+            img.SetPixel(8, y, eyeColor);
+            img.SetPixel(9, y, eyeColor);
+        }
+        img.SetPixel(9, 12, pupilColor);
+        img.SetPixel(8, 10, shineWhite);
+
+        // Right eye
+        for (int y = 10; y <= 13; y++)
+        {
+            img.SetPixel(16, y, eyeColor);
+            img.SetPixel(17, y, eyeColor);
+        }
+        img.SetPixel(17, 12, pupilColor);
+        img.SetPixel(16, 10, shineWhite);
+
+        AddDarkOutline(img, dark);
+        return img;
+    }
+
+    // ══════════════════════════════════════════════
+    //  6. GOLIATH BOSS (Monstro-Inspired Colossus)
     // ══════════════════════════════════════════════
     private static Image BuildGoliathSprite(int w, int h)
     {
@@ -629,6 +746,416 @@ public static class AssetGenerator
         img.SetPixel(16, 2, new Color(1.0f, 0.9f, 0.2f));
 
         AddDarkOutline(img, dark);
+        return img;
+    }
+
+    // ══════════════════════════════════════════════
+    //  7. THEMED FLOORS & WALLS (Spaceship, Desert, Dessert)
+    // ══════════════════════════════════════════════
+
+    private static Image BuildSpaceshipFloor(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        var baseDark = new Color(0.10f, 0.11f, 0.15f);
+        var plateColor = new Color(0.15f, 0.17f, 0.22f);
+        var seamColor = new Color(0.06f, 0.07f, 0.10f);
+        var neonCyan = new Color(0.20f, 0.85f, 0.95f);
+        var neonDim = new Color(0.08f, 0.40f, 0.50f);
+        var boltColor = new Color(0.35f, 0.42f, 0.50f);
+
+        img.Fill(plateColor);
+
+        // Grid panels
+        for (int x = 0; x < w; x++)
+        {
+            img.SetPixel(x, 0, seamColor);
+            img.SetPixel(x, h / 2, seamColor);
+            img.SetPixel(x, h - 1, seamColor);
+        }
+        for (int y = 0; y < h; y++)
+        {
+            img.SetPixel(0, y, seamColor);
+            img.SetPixel(w / 2, y, seamColor);
+            img.SetPixel(w - 1, y, seamColor);
+        }
+
+        // Neon cyan energy conduits along panel edges
+        for (int x = 6; x < w - 6; x++)
+        {
+            if (x == w / 2) continue;
+            img.SetPixel(x, h / 2 - 2, neonDim);
+            if (x % 4 == 0) img.SetPixel(x, h / 2 - 2, neonCyan);
+        }
+
+        // Bolts in corners of 4 sub-plates
+        int[] pts = { 3, w / 2 - 4, w / 2 + 3, w - 4 };
+        foreach (int px in pts)
+        {
+            foreach (int py in pts)
+            {
+                img.SetPixel(px, py, boltColor);
+            }
+        }
+
+        return img;
+    }
+
+    private static Image BuildSpaceshipWall(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        var darkHull = new Color(0.08f, 0.09f, 0.12f);
+        var plateLight = new Color(0.28f, 0.32f, 0.40f);
+        var plateMid = new Color(0.18f, 0.21f, 0.28f);
+        var conduitGlow = new Color(0.25f, 0.90f, 1.0f);
+
+        img.Fill(plateMid);
+
+        // Horizontal steel support beams
+        for (int x = 0; x < w; x++)
+        {
+            img.SetPixel(x, 0, darkHull);
+            img.SetPixel(x, 1, plateLight);
+            img.SetPixel(x, h / 2, darkHull);
+            img.SetPixel(x, h / 2 + 1, plateLight);
+            img.SetPixel(x, h - 1, darkHull);
+
+            // Glowing cyan conduit stripe along center of lower beam
+            if (x % 3 != 0)
+                img.SetPixel(x, h / 2 + 6, conduitGlow);
+        }
+
+        // Vertical bulkhead ribs
+        for (int y = 0; y < h; y++)
+        {
+            img.SetPixel(0, y, darkHull);
+            img.SetPixel(1, y, plateLight);
+            img.SetPixel(w / 2, y, darkHull);
+            img.SetPixel(w / 2 + 1, y, plateLight);
+            img.SetPixel(w - 1, y, darkHull);
+        }
+
+        return img;
+    }
+
+    private static Image BuildDesertFloor(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        var sandBase = new Color(0.68f, 0.52f, 0.34f);
+        var sandLight = new Color(0.78f, 0.64f, 0.44f);
+        var sandDark = new Color(0.50f, 0.36f, 0.22f);
+        var mortar = new Color(0.38f, 0.26f, 0.16f);
+
+        img.Fill(sandBase);
+
+        // Flagstone stone joints
+        int midX = w / 2;
+        int midY = h / 2;
+        for (int x = 0; x < w; x++)
+        {
+            img.SetPixel(x, 0, mortar);
+            img.SetPixel(x, midY, mortar);
+            img.SetPixel(x, h - 1, mortar);
+        }
+        for (int y = 0; y < h; y++)
+        {
+            img.SetPixel(0, y, mortar);
+            img.SetPixel(midX, y, mortar);
+            img.SetPixel(w - 1, y, mortar);
+        }
+
+        // Sandstone sun-bleached bevels
+        for (int x = 1; x < midX; x++)
+        {
+            img.SetPixel(x, 1, sandLight);
+            img.SetPixel(x + midX, 1, sandLight);
+            img.SetPixel(x, midY + 1, sandLight);
+            img.SetPixel(x + midX, midY + 1, sandLight);
+        }
+
+        // Windblown sand dunes texture
+        img.SetPixel(10, 12, sandDark);
+        img.SetPixel(11, 12, sandLight);
+        img.SetPixel(42, 35, sandLight);
+        img.SetPixel(43, 36, sandDark);
+
+        return img;
+    }
+
+    private static Image BuildDesertWall(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        var mortar = new Color(0.32f, 0.20f, 0.12f);
+        var sandstoneLight = new Color(0.82f, 0.65f, 0.42f);
+        var sandstoneMid = new Color(0.64f, 0.48f, 0.30f);
+        var sandstoneDark = new Color(0.48f, 0.32f, 0.18f);
+        var hieroglyphColor = new Color(0.35f, 0.22f, 0.12f);
+
+        img.Fill(sandstoneMid);
+
+        int courseH = h / 4;
+        for (int row = 0; row < 4; row++)
+        {
+            int yStart = row * courseH;
+            for (int x = 0; x < w; x++)
+            {
+                img.SetPixel(x, yStart, mortar);
+                if (yStart + 1 < h) img.SetPixel(x, yStart + 1, sandstoneLight);
+                if (yStart + courseH - 1 < h) img.SetPixel(x, yStart + courseH - 1, sandstoneDark);
+            }
+
+            int offset = (row % 2 == 0) ? 0 : w / 4;
+            for (int x = offset; x < w; x += w / 2)
+            {
+                for (int y = yStart; y < yStart + courseH; y++)
+                {
+                    img.SetPixel(x, y, mortar);
+                }
+            }
+        }
+
+        // Subtle carved hieroglyphic marks on center brick
+        img.SetPixel(28, 20, hieroglyphColor);
+        img.SetPixel(29, 21, hieroglyphColor);
+        img.SetPixel(28, 22, hieroglyphColor);
+        img.SetPixel(34, 20, hieroglyphColor);
+        img.SetPixel(34, 21, hieroglyphColor);
+        img.SetPixel(35, 20, hieroglyphColor);
+
+        return img;
+    }
+
+    private static Image BuildDessertFloor(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        var waferBase = new Color(0.88f, 0.72f, 0.52f);
+        var waferLight = new Color(0.96f, 0.84f, 0.65f);
+        var frostingPink = new Color(0.95f, 0.48f, 0.65f);
+        var sprinkleBlue = new Color(0.35f, 0.85f, 0.95f);
+        var sprinkleYellow = new Color(1.0f, 0.90f, 0.25f);
+        var sprinkleWhite = new Color(1.0f, 1.0f, 1.0f);
+
+        img.Fill(waferBase);
+
+        // Waffle grid lines
+        for (int x = 0; x < w; x += 16)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                img.SetPixel(x, y, frostingPink);
+            }
+        }
+        for (int y = 0; y < h; y += 16)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                img.SetPixel(x, y, frostingPink);
+            }
+        }
+
+        // Wafer cell highlights
+        for (int x = 0; x < w; x += 16)
+        {
+            for (int y = 0; y < h; y += 16)
+            {
+                if (x + 1 < w && y + 1 < h) img.SetPixel(x + 1, y + 1, waferLight);
+            }
+        }
+
+        // Rainbow sugar sprinkle dots
+        img.SetPixel(8, 8, sprinkleBlue);
+        img.SetPixel(9, 8, sprinkleBlue);
+        img.SetPixel(24, 24, sprinkleYellow);
+        img.SetPixel(40, 10, sprinkleWhite);
+        img.SetPixel(54, 42, sprinkleBlue);
+
+        return img;
+    }
+
+    private static Image BuildDessertWall(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        var chocoDark = new Color(0.24f, 0.12f, 0.08f);
+        var chocoMid = new Color(0.42f, 0.24f, 0.16f);
+        var chocoLight = new Color(0.58f, 0.35f, 0.24f);
+        var glazeWhite = new Color(0.98f, 0.94f, 0.90f);
+
+        img.Fill(chocoMid);
+
+        // Chocolate bar segments (4x2 rectangles)
+        int blockW = w / 2;
+        int blockH = h / 2;
+
+        for (int bx = 0; bx < 2; bx++)
+        {
+            for (int by = 0; by < 2; by++)
+            {
+                int startX = bx * blockW;
+                int startY = by * blockH;
+
+                for (int x = startX; x < startX + blockW; x++)
+                {
+                    img.SetPixel(x, startY, chocoLight);
+                    img.SetPixel(x, startY + blockH - 1, chocoDark);
+                }
+                for (int y = startY; y < startY + blockH; y++)
+                {
+                    img.SetPixel(startX, y, chocoLight);
+                    img.SetPixel(startX + blockW - 1, y, chocoDark);
+                }
+            }
+        }
+
+        // Sugar glaze drippings on top row
+        for (int x = 6; x < 26; x++) img.SetPixel(x, 2, glazeWhite);
+        img.SetPixel(12, 3, glazeWhite);
+        img.SetPixel(12, 4, glazeWhite);
+        img.SetPixel(20, 3, glazeWhite);
+
+        return img;
+    }
+
+    // ══════════════════════════════════════════════
+    //  8. DECORATIVE DECALS (Occult Runes, Tech Cores, Splatters)
+    // ══════════════════════════════════════════════
+
+    private static Image BuildRuneDecal(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+        var glow = new Color(0.85f, 0.25f, 0.75f, 0.75f);
+        var centerGlow = new Color(1.0f, 0.50f, 0.90f, 0.90f);
+
+        float cx = w / 2.0f;
+        float cy = h / 2.0f;
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                float dist = new Vector2(x - cx, y - cy).Length();
+                if (Mathf.Abs(dist - 24.0f) < 1.4f || Mathf.Abs(dist - 16.0f) < 1.0f)
+                {
+                    img.SetPixel(x, y, glow);
+                }
+                else if (dist < 4.0f)
+                {
+                    img.SetPixel(x, y, centerGlow);
+                }
+            }
+        }
+
+        // 4 Cardinal rune hashes
+        for (int i = 18; i <= 28; i++)
+        {
+            img.SetPixel((int)cx, (int)(cy - i), glow);
+            img.SetPixel((int)cx, (int)(cy + i), glow);
+            img.SetPixel((int)(cx - i), (int)cy, glow);
+            img.SetPixel((int)(cx + i), (int)cy, glow);
+        }
+
+        return img;
+    }
+
+    private static Image BuildTechDecal(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+        var cyan = new Color(0.20f, 0.85f, 1.0f, 0.80f);
+        var darkCyan = new Color(0.08f, 0.40f, 0.55f, 0.70f);
+
+        float cx = w / 2.0f;
+        float cy = h / 2.0f;
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                float dist = new Vector2(x - cx, y - cy).Length();
+                if (Mathf.Abs(dist - 22.0f) < 1.5f)
+                {
+                    img.SetPixel(x, y, (x % 3 == 0) ? cyan : darkCyan);
+                }
+                else if (Mathf.Abs(dist - 8.0f) < 1.2f)
+                {
+                    img.SetPixel(x, y, cyan);
+                }
+            }
+        }
+
+        return img;
+    }
+
+    private static Image BuildSandDecal(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+        var sand = new Color(0.85f, 0.72f, 0.48f, 0.65f);
+        var sandDark = new Color(0.65f, 0.48f, 0.28f, 0.50f);
+
+        for (int y = 4; y < h - 4; y++)
+        {
+            for (int x = 4; x < w - 4; x++)
+            {
+                float dx = (x - w / 2.0f) / (w * 0.4f);
+                float dy = (y - h / 2.0f) / (h * 0.3f);
+                if (dx * dx + dy * dy <= 1.0f)
+                {
+                    if (y % 6 == 0) img.SetPixel(x, y, sandDark);
+                    else if ((x + y) % 3 == 0) img.SetPixel(x, y, sand);
+                }
+            }
+        }
+        return img;
+    }
+
+    private static Image BuildCandyDecal(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+        var pink = new Color(0.98f, 0.45f, 0.65f, 0.90f);
+        var cyan = new Color(0.35f, 0.85f, 0.95f, 0.90f);
+        var gold = new Color(1.0f, 0.88f, 0.25f, 0.90f);
+
+        int[,] pts = { { 10, 12 }, { 18, 24 }, { 34, 15 }, { 28, 36 }, { 14, 38 }, { 38, 28 } };
+        Color[] cols = { pink, cyan, gold, pink, cyan, gold };
+
+        for (int i = 0; i < 6; i++)
+        {
+            int px = pts[i, 0];
+            int py = pts[i, 1];
+            Color c = cols[i];
+            img.SetPixel(px, py, c);
+            img.SetPixel(px + 1, py, c);
+            img.SetPixel(px, py + 1, c);
+        }
+        return img;
+    }
+
+    private static Image BuildBloodDecal(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+        var bloodDark = new Color(0.48f, 0.06f, 0.12f, 0.70f);
+        var bloodRed = new Color(0.75f, 0.12f, 0.20f, 0.85f);
+
+        for (int y = 4; y < h - 4; y++)
+        {
+            for (int x = 4; x < w - 4; x++)
+            {
+                float dx = (x - w / 2.0f) / (w * 0.35f);
+                float dy = (y - h / 2.0f) / (h * 0.35f);
+                if (dx * dx + dy * dy <= 1.0f)
+                {
+                    img.SetPixel(x, y, ((x + y) % 4 == 0) ? bloodRed : bloodDark);
+                }
+            }
+        }
+        // Little splatter droplets
+        img.SetPixel(5, 6, bloodRed);
+        img.SetPixel(26, 8, bloodRed);
+        img.SetPixel(24, 25, bloodDark);
+        img.SetPixel(7, 24, bloodDark);
+
         return img;
     }
 

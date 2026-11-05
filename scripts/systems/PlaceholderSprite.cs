@@ -18,12 +18,19 @@ public partial class PlaceholderSprite : Node
 
         AssetGenerator.InitializeAssets();
 
-        string nodeName = GetParent().Name;
-        if (nodeName.Contains("Player")) sprite.Texture = AssetGenerator.PlayerTexture;
-        else if (nodeName.Contains("Fly")) sprite.Texture = AssetGenerator.FlyTexture;
-        else if (nodeName.Contains("Chaser")) sprite.Texture = AssetGenerator.ChaserTexture;
-        else if (nodeName.Contains("Shooter")) sprite.Texture = AssetGenerator.ShooterTexture;
-        else if (nodeName.Contains("Boss")) sprite.Texture = AssetGenerator.GoliathBossTexture;
+        Node parent = GetParent();
+        string nodeName = parent.Name;
+
+        if (parent is Player.PlayerController || nodeName.Contains("Player")) sprite.Texture = AssetGenerator.PlayerTexture;
+        else if (parent is Enemies.SlimeEnemy || nodeName.Contains("Slime")) sprite.Texture = AssetGenerator.SlimeTexture;
+        else if (parent is Enemies.FlyEnemy || nodeName.Contains("Fly")) sprite.Texture = AssetGenerator.FlyTexture;
+        else if (parent is Enemies.ChaserEnemy || nodeName.Contains("Chaser")) sprite.Texture = AssetGenerator.ChaserTexture;
+        else if (parent is Enemies.ShooterEnemy || nodeName.Contains("Shooter")) sprite.Texture = AssetGenerator.ShooterTexture;
+        else if (parent is Bosses.BossEnemy || nodeName.Contains("Boss")) sprite.Texture = AssetGenerator.GoliathBossTexture;
+        else if (parent is Environments.RoomObstacle obs)
+        {
+            sprite.Texture = obs.Type == Environments.ObstacleType.Pot ? AssetGenerator.PotObstacleTexture : AssetGenerator.RockObstacleTexture;
+        }
         else if (nodeName.Contains("Rock")) sprite.Texture = AssetGenerator.RockObstacleTexture;
         else if (nodeName.Contains("Pot")) sprite.Texture = AssetGenerator.PotObstacleTexture;
         else
