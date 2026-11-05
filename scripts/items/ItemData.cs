@@ -18,6 +18,7 @@ public class ItemData
     public float SpeedBonus { get; set; } = 0.0f;
     public int MaxHealthBonus { get; set; } = 0;
     public float RangeBonus { get; set; } = 0.0f;
+    public int MultishotBonus { get; set; } = 0;
 
     /// <summary>
     /// Pool of items available in treasure rooms.
@@ -59,6 +60,22 @@ public class ItemData
             ItemColor = new Color(0.75f, 0.4f, 0.95f),
             DamageBonus = 0.8f,
             RangeBonus = 120.0f
+        },
+        new ItemData
+        {
+            Name = "Twin Prism",
+            Description = "Double Shot! (2 Parallel Tears)",
+            ItemColor = new Color(0.25f, 0.95f, 0.85f),
+            MultishotBonus = 1,
+            DamageBonus = 0.5f
+        },
+        new ItemData
+        {
+            Name = "Trinity Core",
+            Description = "Triple Shot! (3 Spreading Tears)",
+            ItemColor = new Color(0.98f, 0.45f, 0.15f),
+            MultishotBonus = 2,
+            FireRateReduction = 0.04f
         }
     };
 

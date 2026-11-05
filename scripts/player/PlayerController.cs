@@ -219,17 +219,44 @@ public partial class PlayerController : CharacterBody2D
             _sprite.FlipH = direction.X < 0;
         }
 
+        var spawnPos = _projectileSpawnPoint?.GlobalPosition ?? GlobalPosition;
+        int count = Mathf.Max(1, Stats.Multishot);
+
+        if (count == 1)
+        {
+            SpawnSingleProjectile(spawnPos, direction);
+        }
+        else if (count == 2)
+        {
+            // Twin parallel shots offset along normal vector
+            Vector2 normal = new Vector2(-direction.Y, direction.X).Normalized();
+            SpawnSingleProjectile(spawnPos + normal * 8.0f, direction);
+            SpawnSingleProjectile(spawnPos - normal * 8.0f, direction);
+        }
+        else
+        {
+            // Triple / multi-shot spread in fan cone
+            float baseAngle = direction.Angle();
+            float spreadStep = Mathf.DegToRad(14.0f);
+            float startAngle = baseAngle - ((count - 1) * spreadStep) / 2.0f;
+
+            for (int i = 0; i < count; i++)
+            {
+                float angle = startAngle + i * spreadStep;
+                Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                SpawnSingleProjectile(spawnPos + dir * 6.0f, dir);
+            }
+        }
+    }
+
+    private void SpawnSingleProjectile(Vector2 position, Vector2 direction)
+    {
         var projectile = _projectileScene.Instantiate<Projectile>();
         projectile.Direction = direction;
         projectile.Speed = Stats.ProjectileSpeed;
         projectile.Damage = Stats.Damage;
         projectile.MaxRange = Stats.ProjectileRange;
-
-        // Spawn from the spawn point or player center
-        var spawnPos = _projectileSpawnPoint?.GlobalPosition ?? GlobalPosition;
-        projectile.GlobalPosition = spawnPos;
-
-        // Add to the current scene (not as child of player, so it stays in world space)
+        projectile.GlobalPosition = position;
         GetTree().CurrentScene.AddChild(projectile);
     }
 

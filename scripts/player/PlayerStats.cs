@@ -21,6 +21,7 @@ public class PlayerStats
     public float ProjectileSpeed { get; set; } = 350.0f;
     public float ProjectileRange { get; set; } = 300.0f;
     public float Luck { get; set; } = 0.0f;
+    public int Multishot { get; set; } = 1; // 1 = normal, 2 = twin parallel, 3 = tri spread
 
     // ── Consumables ──
     public int Coins { get; set; } = 0;
@@ -47,6 +48,7 @@ public class PlayerStats
         ProjectileSpeed = 350.0f;
         ProjectileRange = 300.0f;
         Luck = 0.0f;
+        Multishot = 1;
         Coins = 0;
         Bombs = 1;
         Keys = 1;

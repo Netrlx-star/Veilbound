@@ -53,6 +53,7 @@ public partial class ItemPedestal : Node2D
             player.Stats.FireRate = Mathf.Max(0.12f, player.Stats.FireRate - Item.FireRateReduction);
             player.Stats.MoveSpeed += Item.SpeedBonus;
             player.Stats.ProjectileRange += Item.RangeBonus;
+            player.Stats.Multishot += Item.MultishotBonus;
 
             if (Item.MaxHealthBonus > 0)
             {
