@@ -8,6 +8,7 @@ namespace Veilbound.UI;
 /// </summary>
 public partial class MainMenu : Control
 {
+    private Button _continueButton;
     private Button _playButton;
     private Button _characterSelectBtn;
     private Button _settingsButton;
@@ -23,6 +24,7 @@ public partial class MainMenu : Control
 
     public override void _Ready()
     {
+        _continueButton = GetNodeOrNull<Button>("%ContinueButton");
         _playButton = GetNode<Button>("%PlayButton");
         _characterSelectBtn = GetNodeOrNull<Button>("%CharacterSelectBtn");
         _settingsButton = GetNode<Button>("%SettingsButton");
@@ -34,6 +36,8 @@ public partial class MainMenu : Control
         {
             _titleBasePos = _titleLabel.Position;
         }
+
+        CheckSavedRunStatus();
 
         _playButton.Pressed += OnPlayPressed;
         _settingsButton.Pressed += OnSettingsPressed;
@@ -122,6 +126,26 @@ public partial class MainMenu : Control
     private void OnPlayPressed()
     {
         Systems.GameManager.Instance?.StartNewRun();
+    }
+
+    private void OnContinuePressed()
+    {
+        Systems.GameManager.Instance?.ContinueSavedRun();
+    }
+
+    private void CheckSavedRunStatus()
+    {
+        if (_continueButton == null) return;
+
+        bool hasSave = Systems.SaveManager.HasSavedRun();
+        _continueButton.Visible = hasSave;
+
+        if (hasSave)
+        {
+            _continueButton.Pressed += OnContinuePressed;
+            SetupButtonHoverEffects(_continueButton);
+            _continueButton.GrabFocus();
+        }
     }
 
     private void OnSettingsPressed()

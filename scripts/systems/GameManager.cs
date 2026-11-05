@@ -24,6 +24,10 @@ public partial class GameManager : Node
     public int RoomsCleared { get; set; } = 0;
     public bool IsRunActive { get; private set; } = false;
 
+    // ── Saved Run Loading ──
+    public bool ShouldLoadSavedRun { get; set; } = false;
+    public SavedRunData CachedSavedRun { get; set; } = null;
+
     // ── Signals ──
     [Signal] public delegate void RunStartedEventHandler();
     [Signal] public delegate void RunEndedEventHandler(bool victory);
@@ -36,13 +40,53 @@ public partial class GameManager : Node
         ProcessMode = ProcessModeEnum.Always; // Keep running even when paused
     }
 
+    public override void _Notification(int what)
+    {
+        // Auto-save on Alt+F4 or window close request
+        if (what == (int)Node.NotificationWMCloseRequest)
+        {
+            if (IsRunActive)
+            {
+                SaveManager.SaveCurrentRun();
+            }
+        }
+    }
+
     /// <summary>
     /// Start a new roguelite run. Resets all per-run state and loads the game scene.
     /// </summary>
     public void StartNewRun()
     {
+        SaveManager.ClearSavedRun();
+        ShouldLoadSavedRun = false;
+        CachedSavedRun = null;
+
         CurrentFloor = 1;
         RoomsCleared = 0;
+        IsRunActive = true;
+
+        EmitSignal(SignalName.RunStarted);
+        GetTree().ChangeSceneToFile("res://scenes/Game.tscn");
+    }
+
+    /// <summary>
+    /// Continues an existing saved run.
+    /// </summary>
+    public void ContinueSavedRun()
+    {
+        var data = SaveManager.LoadRun();
+        if (data == null) return;
+
+        CachedSavedRun = data;
+        ShouldLoadSavedRun = true;
+
+        if (System.Enum.TryParse<PlayerClass>(data.PlayerClass, out var pClass))
+        {
+            SelectedClass = pClass;
+        }
+
+        CurrentFloor = data.CurrentFloor;
+        RoomsCleared = data.RoomsCleared;
         IsRunActive = true;
 
         EmitSignal(SignalName.RunStarted);
@@ -55,6 +99,7 @@ public partial class GameManager : Node
     public void EndRun(bool victory = false)
     {
         IsRunActive = false;
+        SaveManager.ClearSavedRun();
         EmitSignal(SignalName.RunEnded, victory);
     }
 
@@ -63,6 +108,10 @@ public partial class GameManager : Node
     /// </summary>
     public void ReturnToMenu()
     {
+        if (IsRunActive)
+        {
+            SaveManager.SaveCurrentRun();
+        }
         IsRunActive = false;
         GetTree().ChangeSceneToFile("res://scenes/ui/MainMenu.tscn");
     }

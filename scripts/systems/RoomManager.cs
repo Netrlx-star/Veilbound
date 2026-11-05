@@ -31,8 +31,11 @@ public partial class RoomManager : Node2D
     private HashSet<Vector2I> _clearedRooms = new();
     private HashSet<Vector2I> _takenItemRooms = new();
 
+    public static RoomManager Instance { get; private set; }
     public int[,] Grid => _grid;
     public HashSet<Vector2I> VisitedRooms => _visitedRooms;
+    public HashSet<Vector2I> ClearedRooms => _clearedRooms;
+    public Dictionary<Vector2I, RoomThemeType> RoomThemes => _roomThemes;
     public Vector2I CurrentRoomPos => _currentRoomPos;
 
     [Signal] public delegate void RoomEnteredEventHandler(Vector2I currentPos);
@@ -55,6 +58,8 @@ public partial class RoomManager : Node2D
 
     public override void _Ready()
     {
+        Instance = this;
+
         _slimeEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/SlimeEnemy.tscn");
         _flyEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/FlyEnemy.tscn");
         _chaserEnemyScene = GD.Load<PackedScene>("res://scenes/enemies/ChaserEnemy.tscn");
@@ -62,8 +67,76 @@ public partial class RoomManager : Node2D
         _bossScene = GD.Load<PackedScene>("res://scenes/bosses/BossEnemy.tscn");
         _trapdoorScene = GD.Load<PackedScene>("res://scenes/rooms/Trapdoor.tscn");
 
-        GenerateFloor();
+        var gm = GameManager.Instance;
+        if (gm != null && gm.ShouldLoadSavedRun && gm.CachedSavedRun != null)
+        {
+            LoadSavedFloor(gm.CachedSavedRun);
+            gm.ShouldLoadSavedRun = false;
+        }
+        else
+        {
+            GenerateFloor();
+            EnterRoom(_currentRoomPos, "center");
+        }
+    }
+
+    private void LoadSavedFloor(SavedRunData data)
+    {
+        _grid = new int[GridSize, GridSize];
+        for (int y = 0; y < 9; y++)
+        {
+            for (int x = 0; x < 9; x++)
+            {
+                _grid[x, y] = data.GridFlat[y * 9 + x];
+            }
+        }
+
+        _visitedRooms.Clear();
+        foreach (var v in data.VisitedRooms)
+        {
+            if (v.Length >= 2) _visitedRooms.Add(new Vector2I(v[0], v[1]));
+        }
+
+        _clearedRooms.Clear();
+        foreach (var c in data.ClearedRooms)
+        {
+            if (c.Length >= 2) _clearedRooms.Add(new Vector2I(c[0], c[1]));
+        }
+
+        _roomThemes.Clear();
+        foreach (var kvp in data.RoomThemes)
+        {
+            var parts = kvp.Key.Split(',');
+            if (parts.Length == 2 && int.TryParse(parts[0], out int x) && int.TryParse(parts[1], out int y))
+            {
+                _roomThemes[new Vector2I(x, y)] = (RoomThemeType)kvp.Value;
+            }
+        }
+
+        _currentRoomPos = new Vector2I(data.CurrentRoomX, data.CurrentRoomY);
+
         EnterRoom(_currentRoomPos, "center");
+
+        // Restore loaded player stats
+        _player = GetTree().GetFirstNodeInGroup("player") as Node2D;
+        if (_player is Player.PlayerController pc)
+        {
+            pc.Stats.MaxHealth = data.MaxHealth;
+            pc.Stats.CurrentHealth = data.CurrentHealth;
+            pc.Stats.Damage = data.Damage;
+            pc.Stats.FireRate = data.FireRate;
+            pc.Stats.MoveSpeed = data.MoveSpeed;
+            pc.Stats.ProjectileSpeed = data.ProjectileSpeed;
+            pc.Stats.ProjectileRange = data.ProjectileRange;
+            pc.Stats.Multishot = data.Multishot;
+            pc.Stats.Coins = data.Coins;
+            pc.Stats.Bombs = data.Bombs;
+            pc.Stats.Keys = data.Keys;
+            pc.Stats.EnemiesKilled = data.EnemiesKilled;
+            pc.Stats.ItemsCollected = data.ItemsCollected;
+
+            pc.NotifyStatsChanged();
+        }
     }
 
     // ══════════════════════════════════════════════
@@ -242,6 +315,7 @@ public partial class RoomManager : Node2D
         }
 
         EmitSignal(SignalName.RoomEntered, gridPos);
+        SaveManager.SaveCurrentRun();
     }
 
     private void SpawnTreasurePedestal(Room room, Vector2I gridPos)
