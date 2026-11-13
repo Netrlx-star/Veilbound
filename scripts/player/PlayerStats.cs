@@ -35,6 +35,11 @@ public class PlayerStats
     // ── Knockback ──
     public float KnockbackForce { get; set; } = 150.0f;
 
+    // ── Weapon Modification Flags ──
+    public bool HasPiercing { get; set; } = false;      // Death Scythe / Spectral tears
+    public bool HasBouncing { get; set; } = false;      // Rubber cement bounce off walls
+    public bool HasBladeDeflection { get; set; } = false; // Blasphemy / Casey bullet reflection
+
     /// <summary>
     /// Reset stats to default for a new run.
     /// </summary>
@@ -55,6 +60,9 @@ public class PlayerStats
         EnemiesKilled = 0;
         ItemsCollected = 0;
         KnockbackForce = 150.0f;
+        HasPiercing = false;
+        HasBouncing = false;
+        HasBladeDeflection = false;
     }
 
     /// <summary>

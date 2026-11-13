@@ -315,6 +315,8 @@ public partial class PlayerController : CharacterBody2D
         projectile.Speed = Stats.ProjectileSpeed;
         projectile.Damage = Stats.Damage;
         projectile.MaxRange = Stats.ProjectileRange;
+        projectile.IsPiercing = Stats.HasPiercing;
+        projectile.BouncesRemaining = Stats.HasBouncing ? 2 : 0;
         projectile.GlobalPosition = position;
         GetTree().CurrentScene.AddChild(projectile);
     }

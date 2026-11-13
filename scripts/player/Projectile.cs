@@ -13,10 +13,13 @@ public partial class Projectile : Area2D
     public float Speed { get; set; } = 350.0f;
     public float Damage { get; set; } = 3.5f;
     public float MaxRange { get; set; } = 300.0f;
+    public bool IsPiercing { get; set; } = false;
+    public int BouncesRemaining { get; set; } = 0;
 
     // ── Internal ──
     private Vector2 _startPosition;
     private float _distanceTraveled = 0.0f;
+    private readonly System.Collections.Generic.HashSet<Node2D> _piercedEnemies = new();
 
     public override void _Ready()
     {
@@ -51,6 +54,14 @@ public partial class Projectile : Area2D
         // Hit a wall (StaticBody2D on walls layer)
         if (body is StaticBody2D)
         {
+            if (BouncesRemaining > 0)
+            {
+                BouncesRemaining--;
+                // Invert direction with slight reflection angle
+                Direction = -Direction + new Vector2((float)GD.RandRange(-0.2, 0.2), (float)GD.RandRange(-0.2, 0.2)).Normalized();
+                return;
+            }
+
             DestroyProjectile();
             return;
         }
@@ -58,6 +69,9 @@ public partial class Projectile : Area2D
         // Hit an enemy
         if (body.IsInGroup("enemies"))
         {
+            if (_piercedEnemies.Contains(body)) return;
+            _piercedEnemies.Add(body);
+
             if (body is Enemies.BaseEnemy enemy)
             {
                 enemy.TakeDamage(Damage);
@@ -67,7 +81,11 @@ public partial class Projectile : Area2D
             {
                 body.Call("TakeDamage", Damage);
             }
-            DestroyProjectile();
+
+            if (!IsPiercing)
+            {
+                DestroyProjectile();
+            }
         }
     }
 

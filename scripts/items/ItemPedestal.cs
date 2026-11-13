@@ -92,6 +92,9 @@ public partial class ItemPedestal : Node2D
             player.Stats.ProjectileRange += Item.RangeBonus;
             player.Stats.Multishot += Item.MultishotBonus;
 
+            if (Item.GrantsPiercing) player.Stats.HasPiercing = true;
+            if (Item.GrantsBouncing) player.Stats.HasBouncing = true;
+
             if (Item.MaxHealthBonus > 0)
             {
                 player.Stats.MaxHealth += Item.MaxHealthBonus;

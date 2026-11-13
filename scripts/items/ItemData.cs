@@ -19,6 +19,8 @@ public class ItemData
     public int MaxHealthBonus { get; set; } = 0;
     public float RangeBonus { get; set; } = 0.0f;
     public int MultishotBonus { get; set; } = 0;
+    public bool GrantsPiercing { get; set; } = false;
+    public bool GrantsBouncing { get; set; } = false;
 
     /// <summary>
     /// Pool of items available in treasure rooms.
@@ -76,6 +78,22 @@ public class ItemData
             ItemColor = new Color(0.98f, 0.45f, 0.15f),
             MultishotBonus = 2,
             FireRateReduction = 0.04f
+        },
+        new ItemData
+        {
+            Name = "Death Scythe",
+            Description = "Spectral Piercing Tears!",
+            ItemColor = new Color(0.85f, 0.85f, 0.95f),
+            DamageBonus = 1.0f,
+            GrantsPiercing = true
+        },
+        new ItemData
+        {
+            Name = "Rubber Core",
+            Description = "Bouncing Projectiles!",
+            ItemColor = new Color(0.2f, 0.85f, 0.4f),
+            SpeedBonus = 20.0f,
+            GrantsBouncing = true
         }
     };
 
