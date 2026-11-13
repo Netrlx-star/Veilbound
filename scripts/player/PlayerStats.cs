@@ -41,6 +41,10 @@ public class PlayerStats
     public bool HasBladeDeflection { get; set; } = false; // Blasphemy / Casey bullet reflection
     public Enemies.StatusEffectType InflictedStatus { get; set; } = Enemies.StatusEffectType.None;
 
+    // ── Active Item Slot ──
+    public Items.ActiveItemData HeldActiveItem { get; set; } = null;
+    public int ActiveItemCharges { get; set; } = 0;
+
     /// <summary>
     /// Reset stats to default for a new run.
     /// </summary>
@@ -65,6 +69,8 @@ public class PlayerStats
         HasBouncing = false;
         HasBladeDeflection = false;
         InflictedStatus = Enemies.StatusEffectType.None;
+        HeldActiveItem = null;
+        ActiveItemCharges = 0;
     }
 
     /// <summary>
