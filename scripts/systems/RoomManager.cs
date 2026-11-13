@@ -322,7 +322,15 @@ public partial class RoomManager : Node2D
         }
         else
         {
-            room.RoomCleared += () => _clearedRooms.Add(gridPos);
+            room.RoomCleared += () =>
+            {
+                _clearedRooms.Add(gridPos);
+                // Award 1 Active Item charge pip upon clearing a room!
+                if (_player is Player.PlayerController pc)
+                {
+                    pc.AddActiveItemCharge(1);
+                }
+            };
             int roomType = _grid[gridPos.X, gridPos.Y];
             SpawnRoomContent(room, roomType);
         }

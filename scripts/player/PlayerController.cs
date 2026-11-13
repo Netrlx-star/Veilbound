@@ -32,6 +32,7 @@ public partial class PlayerController : CharacterBody2D
     [Signal] public delegate void HealthChangedEventHandler(int currentHealth, int maxHealth);
     [Signal] public delegate void StatsChangedEventHandler();
     [Signal] public delegate void ConsumablesChangedEventHandler(int coins, int bombs, int keys);
+    [Signal] public delegate void ActiveItemChangedEventHandler(string name, int currentCharges, int maxCharges);
     [Signal] public delegate void PlayerDiedEventHandler();
 
     public override void _Ready()
@@ -68,6 +69,14 @@ public partial class PlayerController : CharacterBody2D
         EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
         EmitSignal(SignalName.StatsChanged);
         EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+        NotifyActiveItemChanged();
+    }
+
+    public void NotifyActiveItemChanged()
+    {
+        string itemName = Stats.HeldActiveItem != null ? Stats.HeldActiveItem.Name : "None";
+        int max = Stats.HeldActiveItem != null ? Stats.HeldActiveItem.MaxCharges : 0;
+        EmitSignal(SignalName.ActiveItemChanged, itemName, Stats.ActiveItemCharges, max);
     }
 
     public void NotifyStatsChanged()
@@ -75,6 +84,7 @@ public partial class PlayerController : CharacterBody2D
         EmitSignal(SignalName.StatsChanged);
         EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
         EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+        NotifyActiveItemChanged();
     }
 
     public void AddCoins(int amount)
@@ -111,6 +121,7 @@ public partial class PlayerController : CharacterBody2D
         HandleMovement(delta);
         HandleShooting(delta);
         HandleBombPlacement();
+        HandleActiveItem();
         HandleInvincibility(delta);
     }
 
@@ -129,6 +140,104 @@ public partial class PlayerController : CharacterBody2D
                 GetTree().CurrentScene.AddChild(bomb);
             }
         }
+    }
+
+    private void HandleActiveItem()
+    {
+        if (Input.IsActionJustPressed("use_item") || Input.IsKeyPressed(Key.Space))
+        {
+            UseActiveItem();
+        }
+    }
+
+    public void AddActiveItemCharge(int amount = 1)
+    {
+        if (Stats.HeldActiveItem == null) return;
+        Stats.ActiveItemCharges = Mathf.Min(Stats.HeldActiveItem.MaxCharges, Stats.ActiveItemCharges + amount);
+        NotifyActiveItemChanged();
+    }
+
+    public void SetActiveItem(Items.ActiveItemData item)
+    {
+        Stats.HeldActiveItem = item;
+        Stats.ActiveItemCharges = item != null ? item.MaxCharges : 0;
+        NotifyActiveItemChanged();
+    }
+
+    private void UseActiveItem()
+    {
+        if (Stats.HeldActiveItem == null) return;
+
+        // Check if fully charged
+        if (Stats.ActiveItemCharges < Stats.HeldActiveItem.MaxCharges)
+        {
+            // Flash charge meter feedback
+            Systems.CameraShaker.Shake(0.08f);
+            return;
+        }
+
+        // Execute Active Item
+        switch (Stats.HeldActiveItem.Type)
+        {
+            case Items.ActiveItemType.AstralBurst:
+                // Shockwave clears all enemy bullets & knocks enemies back
+                var projectiles = GetTree().GetNodesInGroup("enemy_projectiles");
+                foreach (Node p in projectiles) p.QueueFree();
+
+                foreach (Node enemyNode in GetTree().GetNodesInGroup("enemies"))
+                {
+                    if (enemyNode is Enemies.BaseEnemy e)
+                    {
+                        e.TakeDamage(10.0f);
+                        Vector2 pushDir = (e.GlobalPosition - GlobalPosition).Normalized();
+                        e.ApplyKnockback(pushDir, 350.0f);
+                    }
+                }
+                Systems.CameraShaker.Shake(0.40f);
+                break;
+
+            case Items.ActiveItemType.HourglassOfTime:
+                // Freeze/slow all enemies heavily
+                foreach (Node enemyNode in GetTree().GetNodesInGroup("enemies"))
+                {
+                    if (enemyNode is Enemies.BaseEnemy e)
+                    {
+                        e.StatusManager?.ApplyEffect(Enemies.StatusEffectType.Slow, 4.0f, 0.5f);
+                    }
+                }
+                Systems.CameraShaker.Shake(0.20f);
+                break;
+
+            case Items.ActiveItemType.CrucibleOfGreed:
+                // Convert pots and rocks into coins & pickups
+                foreach (Node obsNode in GetTree().GetNodesInGroup("obstacles"))
+                {
+                    if (obsNode is Environments.RoomObstacle obs)
+                    {
+                        obs.Explode();
+                    }
+                }
+                Systems.CameraShaker.Shake(0.30f);
+                break;
+
+            case Items.ActiveItemType.BloodRitual:
+                // Pay 1 health for a 360° fan of 10 piercing spectral tears
+                TakeDamage(1);
+                int count = 10;
+                float step = Mathf.Tau / count;
+                for (int i = 0; i < count; i++)
+                {
+                    float angle = i * step;
+                    Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                    SpawnSingleProjectile(GlobalPosition + dir * 14.0f, dir);
+                }
+                Systems.CameraShaker.Shake(0.35f);
+                break;
+        }
+
+        // Consume charges
+        Stats.ActiveItemCharges = 0;
+        NotifyActiveItemChanged();
     }
 
     // ══════════════════════════════════════════════

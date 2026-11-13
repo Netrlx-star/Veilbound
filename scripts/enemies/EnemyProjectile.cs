@@ -19,6 +19,8 @@ public partial class EnemyProjectile : Area2D
 
     public override void _Ready()
     {
+        AddToGroup("enemy_projectiles");
+
         var sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
         if (sprite != null && sprite.Texture == null)
         {

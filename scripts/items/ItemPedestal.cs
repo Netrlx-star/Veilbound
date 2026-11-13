@@ -9,6 +9,7 @@ namespace Veilbound.Items;
 public partial class ItemPedestal : Node2D
 {
     public ItemData Item { get; set; }
+    public ActiveItemData ActiveItem { get; set; }
     [Export] public int Price { get; set; } = 0; // 0 = free, > 0 = shop item
 
     private Area2D _pickupArea;
@@ -20,14 +21,29 @@ public partial class ItemPedestal : Node2D
 
     public override void _Ready()
     {
-        Item ??= ItemData.GetRandomItem();
+        // 25% chance to roll an Active Spacebar Item instead of a passive item
+        if (Item == null && ActiveItem == null)
+        {
+            if (GD.Randf() < 0.25f)
+            {
+                ActiveItem = ActiveItemData.GetRandomActiveItem();
+            }
+            else
+            {
+                Item = ItemData.GetRandomItem();
+            }
+        }
 
         _pickupArea = GetNode<Area2D>("PickupArea");
         _itemSprite = GetNode<Sprite2D>("ItemSprite");
         _nameLabel = GetNode<Label>("NameLabel");
 
-        _itemSprite.Texture = Systems.PlaceholderSprite.CreateCircleTexture(12, Item.ItemColor);
-        _nameLabel.Text = $"{Item.Name}\n{Item.Description}";
+        Color itemColor = ActiveItem != null ? ActiveItem.ItemColor : (Item != null ? Item.ItemColor : Colors.White);
+        string itemName = ActiveItem != null ? ActiveItem.Name : (Item != null ? Item.Name : "Item");
+        string itemDesc = ActiveItem != null ? ActiveItem.Description : (Item != null ? Item.Description : "");
+
+        _itemSprite.Texture = Systems.PlaceholderSprite.CreateCircleTexture(12, itemColor);
+        _nameLabel.Text = $"{itemName}\n{itemDesc}";
         _nameLabel.Visible = false;
 
         if (Price > 0)
@@ -85,21 +101,29 @@ public partial class ItemPedestal : Node2D
 
             _collected = true;
 
-            // Apply item bonuses to player
-            player.Stats.Damage += Item.DamageBonus;
-            player.Stats.FireRate = Mathf.Max(0.12f, player.Stats.FireRate - Item.FireRateReduction);
-            player.Stats.MoveSpeed += Item.SpeedBonus;
-            player.Stats.ProjectileRange += Item.RangeBonus;
-            player.Stats.Multishot += Item.MultishotBonus;
-
-            if (Item.GrantsPiercing) player.Stats.HasPiercing = true;
-            if (Item.GrantsBouncing) player.Stats.HasBouncing = true;
-            if (Item.InflictsStatus != Enemies.StatusEffectType.None) player.Stats.InflictedStatus = Item.InflictsStatus;
-
-            if (Item.MaxHealthBonus > 0)
+            if (ActiveItem != null)
             {
-                player.Stats.MaxHealth += Item.MaxHealthBonus;
-                player.Heal(Item.MaxHealthBonus);
+                // Equip active item
+                player.SetActiveItem(ActiveItem);
+            }
+            else if (Item != null)
+            {
+                // Apply passive item bonuses to player
+                player.Stats.Damage += Item.DamageBonus;
+                player.Stats.FireRate = Mathf.Max(0.12f, player.Stats.FireRate - Item.FireRateReduction);
+                player.Stats.MoveSpeed += Item.SpeedBonus;
+                player.Stats.ProjectileRange += Item.RangeBonus;
+                player.Stats.Multishot += Item.MultishotBonus;
+
+                if (Item.GrantsPiercing) player.Stats.HasPiercing = true;
+                if (Item.GrantsBouncing) player.Stats.HasBouncing = true;
+                if (Item.InflictsStatus != Enemies.StatusEffectType.None) player.Stats.InflictedStatus = Item.InflictsStatus;
+
+                if (Item.MaxHealthBonus > 0)
+                {
+                    player.Stats.MaxHealth += Item.MaxHealthBonus;
+                    player.Heal(Item.MaxHealthBonus);
+                }
             }
 
             player.Stats.ItemsCollected++;
