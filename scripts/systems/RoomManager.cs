@@ -30,6 +30,7 @@ public partial class RoomManager : Node2D
     private HashSet<Vector2I> _visitedRooms = new();
     private HashSet<Vector2I> _clearedRooms = new();
     private HashSet<Vector2I> _takenItemRooms = new();
+    private HashSet<Vector2I> _unlockedRooms = new(); // Stores rooms whose locked doors were already unlocked
 
     public static RoomManager Instance { get; private set; }
     public int[,] Grid => _grid;
@@ -217,6 +218,18 @@ public partial class RoomManager : Node2D
             }
         }
 
+        // Place shop room at another dead end or branch (requires a key to unlock)
+        foreach (var pos in roomPositions)
+        {
+            int neighbors = CountAdjacentRooms(pos, roomPositions);
+            if (neighbors == 1 && pos != start && _grid[pos.X, pos.Y] == 1)
+            {
+                _grid[pos.X, pos.Y] = 4; // Shop room
+                _roomThemes[pos] = RoomThemeType.Dungeon;
+                break;
+            }
+        }
+
         GD.Print($"Floor generated with {roomPositions.Count} rooms");
     }
 
@@ -280,6 +293,12 @@ public partial class RoomManager : Node2D
         room.HasLeftDoor   = HasRoomAt(gridPos + Vector2I.Left);
         room.HasRightDoor  = HasRoomAt(gridPos + Vector2I.Right);
 
+        // Check door lock state (Shop room 4 requires a key to enter)
+        CheckDoorLockState(room, gridPos, "top", gridPos + Vector2I.Up);
+        CheckDoorLockState(room, gridPos, "bottom", gridPos + Vector2I.Down);
+        CheckDoorLockState(room, gridPos, "left", gridPos + Vector2I.Left);
+        CheckDoorLockState(room, gridPos, "right", gridPos + Vector2I.Right);
+
         AddChild(room);
         _currentRoom = room;
 
@@ -314,6 +333,12 @@ public partial class RoomManager : Node2D
             SpawnTreasurePedestal(room, gridPos);
         }
 
+        // If shop room, spawn shop wares
+        if (_grid[gridPos.X, gridPos.Y] == 4 && !_clearedRooms.Contains(gridPos))
+        {
+            SpawnShopWares(room, gridPos);
+        }
+
         EmitSignal(SignalName.RoomEntered, gridPos);
         SaveManager.SaveCurrentRun();
     }
@@ -330,6 +355,87 @@ public partial class RoomManager : Node2D
             // Record when collected so it doesn't respawn on re-entry
             _takenItemRooms.Add(gridPos);
         }
+    }
+
+    private void SpawnShopWares(Room room, Vector2I gridPos)
+    {
+        room.SetCleared();
+        float centerX = Room.RoomWidth / 2.0f;
+        float centerY = Room.RoomHeight / 2.0f;
+
+        // 1. Red Heart (3 coins)
+        var heart = new Items.ConsumablePickup();
+        room.AddChild(heart);
+        heart.Initialize(new Vector2(centerX - 180, centerY), Items.ConsumableType.Heart, price: 3, value: 1);
+
+        // 2. Bomb Pickup (5 coins)
+        var bomb = new Items.ConsumablePickup();
+        room.AddChild(bomb);
+        bomb.Initialize(new Vector2(centerX - 60, centerY), Items.ConsumableType.Bomb, price: 5, value: 1);
+
+        // 3. Key Pickup (5 coins)
+        var key = new Items.ConsumablePickup();
+        room.AddChild(key);
+        key.Initialize(new Vector2(centerX + 60, centerY), Items.ConsumableType.Key, price: 5, value: 1);
+
+        // 4. Shop Item Pedestal (15 coins)
+        var pedestalScene = GD.Load<PackedScene>("res://scenes/items/ItemPedestal.tscn");
+        if (pedestalScene != null)
+        {
+            var pedestal = pedestalScene.Instantiate<Items.ItemPedestal>();
+            pedestal.Price = 15;
+            pedestal.Position = new Vector2(centerX + 180, centerY);
+            room.AddChild(pedestal);
+        }
+
+        // Shopkeeper decorative carpet & NPC visual
+        var carpet = new ColorRect
+        {
+            Color = new Color(0.45f, 0.15f, 0.20f, 0.75f),
+            Position = new Vector2(centerX - 240, centerY - 60),
+            Size = new Vector2(480, 120),
+            ZIndex = -1
+        };
+        room.AddChild(carpet);
+
+        // Shopkeeper sign label
+        var sign = new Label
+        {
+            Text = "— VEIL BAZAAR —\nKeys, Bombs & Curiosities",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Position = new Vector2(centerX - 150, centerY - 110),
+            Size = new Vector2(300, 40)
+        };
+        sign.AddThemeColorOverride("font_color", new Color(1.0f, 0.90f, 0.40f));
+        sign.AddThemeFontSizeOverride("font_size", 16);
+        room.AddChild(sign);
+    }
+
+    private void CheckDoorLockState(Room room, Vector2I currentPos, string direction, Vector2I neighborPos)
+    {
+        if (HasRoomAt(neighborPos))
+        {
+            // If the neighbor room is a Shop (type 4) and has not been unlocked yet, lock the door
+            if (_grid[neighborPos.X, neighborPos.Y] == 4 && !_unlockedRooms.Contains(neighborPos))
+            {
+                room.DoorLocked[direction] = true;
+            }
+        }
+    }
+
+    public void UnlockDoorConnection(Room room, string direction)
+    {
+        Vector2I offset = direction switch
+        {
+            "top" => Vector2I.Up,
+            "bottom" => Vector2I.Down,
+            "left" => Vector2I.Left,
+            "right" => Vector2I.Right,
+            _ => Vector2I.Zero
+        };
+
+        var targetPos = _currentRoomPos + offset;
+        _unlockedRooms.Add(targetPos);
     }
 
     private void SpawnRoomContent(Room room, int roomType)
@@ -357,6 +463,10 @@ public partial class RoomManager : Node2D
                 break;
 
             case 3: // Treasure room
+                room.SetCleared();
+                break;
+
+            case 4: // Shop room
                 room.SetCleared();
                 break;
 

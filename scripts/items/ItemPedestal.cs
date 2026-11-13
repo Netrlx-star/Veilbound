@@ -9,10 +9,12 @@ namespace Veilbound.Items;
 public partial class ItemPedestal : Node2D
 {
     public ItemData Item { get; set; }
+    [Export] public int Price { get; set; } = 0; // 0 = free, > 0 = shop item
 
     private Area2D _pickupArea;
     private Sprite2D _itemSprite;
     private Label _nameLabel;
+    private Label _priceLabel;
     private float _floatTimer = 0.0f;
     private bool _collected = false;
 
@@ -27,6 +29,21 @@ public partial class ItemPedestal : Node2D
         _itemSprite.Texture = Systems.PlaceholderSprite.CreateCircleTexture(12, Item.ItemColor);
         _nameLabel.Text = $"{Item.Name}\n{Item.Description}";
         _nameLabel.Visible = false;
+
+        if (Price > 0)
+        {
+            _priceLabel = new Label
+            {
+                Name = "PriceLabel",
+                Text = $"{Price}¢",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Position = new Vector2(-30, 16),
+                Size = new Vector2(60, 20)
+            };
+            _priceLabel.AddThemeColorOverride("font_color", new Color(1.0f, 0.85f, 0.2f));
+            _priceLabel.AddThemeFontSizeOverride("font_size", 13);
+            AddChild(_priceLabel);
+        }
 
         _pickupArea.BodyEntered += OnBodyEntered;
     }
@@ -46,6 +63,26 @@ public partial class ItemPedestal : Node2D
 
         if (body is Player.PlayerController player)
         {
+            if (Price > 0)
+            {
+                if (player.Stats.Coins < Price)
+                {
+                    if (_priceLabel != null)
+                    {
+                        var flashTween = CreateTween();
+                        flashTween.TweenProperty(_priceLabel, "modulate", new Color(1, 0.2f, 0.2f), 0.1);
+                        flashTween.TweenProperty(_priceLabel, "modulate", Colors.White, 0.15);
+                    }
+                    return;
+                }
+
+                player.Stats.Coins -= Price;
+                if (_priceLabel != null)
+                {
+                    _priceLabel.Visible = false;
+                }
+            }
+
             _collected = true;
 
             // Apply item bonuses to player

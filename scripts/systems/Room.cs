@@ -49,6 +49,9 @@ public partial class Room : Node2D
     public bool HasLeftDoor { get; set; } = false;
     public bool HasRightDoor { get; set; } = false;
 
+    // ── Door locks (requires key to enter target room) ──
+    public Dictionary<string, bool> DoorLocked { get; } = new();
+
     // ── References ──
     private List<BaseEnemy> _enemies = new();
     private List<Area2D> _doors = new();
@@ -297,23 +300,82 @@ public partial class Room : Node2D
         door.AddChild(collision);
 
         // Gothic door archway texture
+        bool isLocked = DoorLocked.TryGetValue(direction, out bool locked) && locked;
+        Color doorColor = isLocked ? new Color(0.95f, 0.75f, 0.20f) : new Color(0.5f, 0.9f, 0.5f);
+
         var visual = new TextureRect
         {
             Texture = AssetGenerator.DoorFrameTexture,
             Position = visualPosition - triggerPos - new Vector2(DoorWidth / 2, DoorWidth / 2),
             Size = new Vector2(DoorWidth, DoorWidth),
-            Modulate = new Color(0.5f, 0.9f, 0.5f)
+            Modulate = doorColor
         };
         door.AddChild(visual);
         visual.Name = "Visual";
 
+        // If locked, add a brass padlock icon
+        if (isLocked)
+        {
+            var lockIcon = new Sprite2D
+            {
+                Name = "LockIcon",
+                Texture = PlaceholderSprite.CreateKeyTexture(),
+                Position = visualPosition - triggerPos,
+                Scale = new Vector2(1.2f, 1.2f)
+            };
+            door.AddChild(lockIcon);
+        }
+
         // Store direction as metadata
         door.SetMeta("direction", direction);
+        door.SetMeta("locked", isLocked);
 
         door.BodyEntered += (body) =>
         {
-            if (body.IsInGroup("player") && IsCleared && _transitionCooldown <= 0)
+            if (body is Player.PlayerController player && IsCleared && _transitionCooldown <= 0)
             {
+                bool doorIsLocked = door.HasMeta("locked") && (bool)door.GetMeta("locked");
+                if (doorIsLocked)
+                {
+                    // Check if player has a key
+                    if (player.Stats.Keys > 0)
+                    {
+                        // Consume key and unlock door
+                        player.UseKey();
+                        door.SetMeta("locked", false);
+                        DoorLocked[direction] = false;
+
+                        // Pop unlock effect on visual
+                        visual.Modulate = new Color(0.5f, 0.9f, 0.5f);
+                        var lockNode = door.GetNodeOrNull<Sprite2D>("LockIcon");
+                        if (lockNode != null)
+                        {
+                            var lockTween = lockNode.CreateTween();
+                            lockTween.TweenProperty(lockNode, "scale", Vector2.One * 2.0f, 0.15);
+                            lockTween.Parallel().TweenProperty(lockNode, "modulate:a", 0.0f, 0.15);
+                            lockTween.Chain().TweenCallback(Callable.From(lockNode.QueueFree));
+                        }
+
+                        // Unlock target room in manager so returning is free
+                        RoomManager.Instance?.UnlockDoorConnection(this, direction);
+
+                        _transitionCooldown = 0.5;
+                        EmitSignal(SignalName.DoorEntered, direction);
+                    }
+                    else
+                    {
+                        // Flash lock red to indicate locked door needing key
+                        var lockNode = door.GetNodeOrNull<Sprite2D>("LockIcon");
+                        if (lockNode != null)
+                        {
+                            var deniedTween = lockNode.CreateTween();
+                            deniedTween.TweenProperty(lockNode, "modulate", new Color(1, 0.1f, 0.1f), 0.1);
+                            deniedTween.TweenProperty(lockNode, "modulate", Colors.White, 0.15);
+                        }
+                    }
+                    return;
+                }
+
                 _transitionCooldown = 0.5;
                 EmitSignal(SignalName.DoorEntered, direction);
             }

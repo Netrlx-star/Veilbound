@@ -28,6 +28,7 @@ public partial class Minimap : Control
     private static readonly Color CurrentRoomColor = new(1.0f, 1.0f, 1.0f, 1.0f);
     private static readonly Color BossRoomColor = new(0.85f, 0.20f, 0.25f, 0.95f);
     private static readonly Color TreasureRoomColor = new(0.95f, 0.80f, 0.20f, 0.95f);
+    private static readonly Color ShopRoomColor = new(0.20f, 0.80f, 0.40f, 0.95f);
     private static readonly Color DoorBridgeColor = new(0.70f, 0.70f, 0.85f, 0.80f);
 
     public override void _Ready()
@@ -132,6 +133,10 @@ public partial class Minimap : Control
             {
                 DrawStarIcon(cellRect.GetCenter(), new Color(0.95f, 0.85f, 0.3f, 0.7f));
             }
+            else if (type == 4) // Shop room discovered
+            {
+                DrawShopIcon(cellRect.GetCenter(), new Color(0.3f, 0.95f, 0.5f, 0.85f));
+            }
         }
 
         // 3. Draw visited rooms
@@ -144,6 +149,7 @@ public partial class Minimap : Control
             {
                 2 => BossRoomColor,       // Boss Room (Red)
                 3 => TreasureRoomColor,   // Treasure Room (Gold)
+                4 => ShopRoomColor,       // Shop Room (Emerald Green)
                 _ => NormalRoomColor      // Normal Room
             };
 
@@ -158,6 +164,10 @@ public partial class Minimap : Control
             else if (type == 3)
             {
                 DrawStarIcon(cellRect.GetCenter(), new Color(0.2f, 0.15f, 0.05f));
+            }
+            else if (type == 4)
+            {
+                DrawShopIcon(cellRect.GetCenter(), new Color(0.05f, 0.25f, 0.10f));
             }
 
             // Highlight current room
@@ -229,5 +239,12 @@ public partial class Minimap : Control
         DrawLine(center + new Vector2(-3, 0), center + new Vector2(3, 0), color, 1.2f);
         DrawLine(center + new Vector2(0, -3), center + new Vector2(0, 3), color, 1.2f);
         DrawCircle(center, 1.2f, color);
+    }
+
+    private void DrawShopIcon(Vector2 center, Color color)
+    {
+        // 5x5 coin / money bag emblem (¢ symbol or pouch)
+        DrawCircle(center, 2.3f, color);
+        DrawLine(center + new Vector2(0, -3.2f), center + new Vector2(0, 3.2f), color, 1.0f);
     }
 }
