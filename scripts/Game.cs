@@ -48,6 +48,7 @@ public partial class Game : Node2D
         _player.PlayerDied += OnPlayerDied;
         _player.StatsChanged += OnPlayerStatsChanged;
         _player.ConsumablesChanged += OnConsumablesChanged;
+        _player.ActiveItemChanged += OnActiveItemChanged;
         HookRoomManagerSignals();
 
         if (Systems.GameManager.Instance != null)
@@ -77,6 +78,11 @@ public partial class Game : Node2D
     private void OnConsumablesChanged(int coins, int bombs, int keys)
     {
         _hud?.UpdateConsumables(coins, bombs, keys);
+    }
+
+    private void OnActiveItemChanged(string name, int currentCharges, int maxCharges)
+    {
+        _hud?.UpdateActiveItem(name, currentCharges, maxCharges);
     }
 
     private void HookRoomManagerSignals()

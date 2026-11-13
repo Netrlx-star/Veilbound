@@ -45,6 +45,11 @@ public partial class HUD : CanvasLayer
     private Label _floorLabel;
     private Label _roomsLabel;
 
+    // ── Active Item Slot UI ──
+    private PanelContainer _activeItemPanel;
+    private Label _activeItemNameLabel;
+    private HBoxContainer _chargePipsContainer;
+
     // ── Minimap ──
     private Minimap _minimap;
 
@@ -116,6 +121,75 @@ public partial class HUD : CanvasLayer
         UpdateRoomsDisplay(0);
         UpdateConsumables(0, 1, 1);
         UpdateControlsGuide();
+        BuildActiveItemUI();
+    }
+
+    private void BuildActiveItemUI()
+    {
+        _activeItemPanel = new PanelContainer
+        {
+            Name = "ActiveItemPanel",
+            Position = new Vector2(16, 120),
+            CustomMinimumSize = new Vector2(140, 52)
+        };
+
+        var style = new StyleBoxFlat
+        {
+            BgColor = new Color(0.1f, 0.08f, 0.14f, 0.85f),
+            BorderColor = new Color(0.45f, 0.4f, 0.6f, 0.9f),
+            BorderWidthBottom = 2,
+            BorderWidthTop = 2,
+            BorderWidthLeft = 2,
+            BorderWidthRight = 2,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4
+        };
+        _activeItemPanel.AddThemeStyleboxOverride("panel", style);
+
+        var vbox = new VBoxContainer();
+        _activeItemNameLabel = new Label
+        {
+            Text = "[SPACE] None",
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        _activeItemNameLabel.AddThemeFontSizeOverride("font_size", 11);
+        _activeItemNameLabel.AddThemeColorOverride("font_color", new Color(0.9f, 0.9f, 0.95f));
+        vbox.AddChild(_activeItemNameLabel);
+
+        _chargePipsContainer = new HBoxContainer
+        {
+            Alignment = BoxContainer.AlignmentMode.Center
+        };
+        vbox.AddChild(_chargePipsContainer);
+
+        _activeItemPanel.AddChild(vbox);
+        AddChild(_activeItemPanel);
+    }
+
+    public void UpdateActiveItem(string name, int currentCharges, int maxCharges)
+    {
+        if (_activeItemNameLabel == null || _chargePipsContainer == null) return;
+
+        _activeItemNameLabel.Text = $"[SPACE] {name}";
+
+        foreach (Node child in _chargePipsContainer.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        if (maxCharges <= 0) return;
+
+        for (int i = 0; i < maxCharges; i++)
+        {
+            var pip = new ColorRect
+            {
+                CustomMinimumSize = new Vector2(14, 8),
+                Color = i < currentCharges ? new Color(0.2f, 0.95f, 0.35f) : new Color(0.25f, 0.25f, 0.3f, 0.7f)
+            };
+            _chargePipsContainer.AddChild(pip);
+        }
     }
 
     public override void _Input(InputEvent @event)
