@@ -39,6 +39,7 @@ public class PlayerStats
     public bool HasPiercing { get; set; } = false;      // Death Scythe / Spectral tears
     public bool HasBouncing { get; set; } = false;      // Rubber cement bounce off walls
     public bool HasBladeDeflection { get; set; } = false; // Blasphemy / Casey bullet reflection
+    public Enemies.StatusEffectType InflictedStatus { get; set; } = Enemies.StatusEffectType.None;
 
     /// <summary>
     /// Reset stats to default for a new run.
@@ -63,6 +64,7 @@ public class PlayerStats
         HasPiercing = false;
         HasBouncing = false;
         HasBladeDeflection = false;
+        InflictedStatus = Enemies.StatusEffectType.None;
     }
 
     /// <summary>

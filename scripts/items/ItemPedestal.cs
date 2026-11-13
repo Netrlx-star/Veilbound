@@ -94,6 +94,7 @@ public partial class ItemPedestal : Node2D
 
             if (Item.GrantsPiercing) player.Stats.HasPiercing = true;
             if (Item.GrantsBouncing) player.Stats.HasBouncing = true;
+            if (Item.InflictsStatus != Enemies.StatusEffectType.None) player.Stats.InflictedStatus = Item.InflictsStatus;
 
             if (Item.MaxHealthBonus > 0)
             {

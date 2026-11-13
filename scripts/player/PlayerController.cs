@@ -230,6 +230,7 @@ public partial class PlayerController : CharacterBody2D
             SlashDirection = direction,
             Damage = Stats.Damage,
             KnockbackForce = Stats.KnockbackForce,
+            InflictedStatus = Stats.InflictedStatus,
             GlobalPosition = GlobalPosition + direction * 16.0f
         };
         GetTree().CurrentScene.AddChild(slash);
@@ -317,6 +318,7 @@ public partial class PlayerController : CharacterBody2D
         projectile.MaxRange = Stats.ProjectileRange;
         projectile.IsPiercing = Stats.HasPiercing;
         projectile.BouncesRemaining = Stats.HasBouncing ? 2 : 0;
+        projectile.InflictedStatus = Stats.InflictedStatus;
         projectile.GlobalPosition = position;
         GetTree().CurrentScene.AddChild(projectile);
     }

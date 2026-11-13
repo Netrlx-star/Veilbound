@@ -15,6 +15,7 @@ public partial class Projectile : Area2D
     public float MaxRange { get; set; } = 300.0f;
     public bool IsPiercing { get; set; } = false;
     public int BouncesRemaining { get; set; } = 0;
+    public Enemies.StatusEffectType InflictedStatus { get; set; } = Enemies.StatusEffectType.None;
 
     // ── Internal ──
     private Vector2 _startPosition;
@@ -28,7 +29,14 @@ public partial class Projectile : Area2D
         var sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
         if (sprite != null && sprite.Texture == null)
         {
-            sprite.Texture = Systems.PlaceholderSprite.CreateCircleTexture(6, new Color(0.35f, 0.75f, 1.0f));
+            Color tearColor = InflictedStatus switch
+            {
+                Enemies.StatusEffectType.Poison => new Color(0.35f, 0.95f, 0.35f),
+                Enemies.StatusEffectType.Burn => new Color(1.0f, 0.55f, 0.15f),
+                Enemies.StatusEffectType.Slow => new Color(0.40f, 0.85f, 1.0f),
+                _ => new Color(0.35f, 0.75f, 1.0f)
+            };
+            sprite.Texture = Systems.PlaceholderSprite.CreateCircleTexture(6, tearColor);
         }
 
         // Connect to body_entered for hitting enemies/walls
@@ -76,6 +84,12 @@ public partial class Projectile : Area2D
             {
                 enemy.TakeDamage(Damage);
                 enemy.ApplyKnockback(Direction, 200.0f);
+
+                // Inflict status effect if present
+                if (InflictedStatus != Enemies.StatusEffectType.None)
+                {
+                    enemy.StatusManager?.ApplyEffect(InflictedStatus, 3.5f, Damage * 0.4f);
+                }
             }
             else if (body.HasMethod("TakeDamage"))
             {

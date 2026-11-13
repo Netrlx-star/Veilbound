@@ -21,6 +21,7 @@ public class ItemData
     public int MultishotBonus { get; set; } = 0;
     public bool GrantsPiercing { get; set; } = false;
     public bool GrantsBouncing { get; set; } = false;
+    public Enemies.StatusEffectType InflictsStatus { get; set; } = Enemies.StatusEffectType.None;
 
     /// <summary>
     /// Pool of items available in treasure rooms.
@@ -94,6 +95,30 @@ public class ItemData
             ItemColor = new Color(0.2f, 0.85f, 0.4f),
             SpeedBonus = 20.0f,
             GrantsBouncing = true
+        },
+        new ItemData
+        {
+            Name = "Viper Fang",
+            Description = "Poison Tears (Damage over Time)!",
+            ItemColor = new Color(0.25f, 0.95f, 0.35f),
+            DamageBonus = 0.5f,
+            InflictsStatus = Enemies.StatusEffectType.Poison
+        },
+        new ItemData
+        {
+            Name = "Solar Core",
+            Description = "Burn Tears (Flaming rapid ticks)!",
+            ItemColor = new Color(1.0f, 0.45f, 0.1f),
+            DamageBonus = 0.8f,
+            InflictsStatus = Enemies.StatusEffectType.Burn
+        },
+        new ItemData
+        {
+            Name = "Frost Needle",
+            Description = "Frost Slow (Chills and slows monsters)!",
+            ItemColor = new Color(0.35f, 0.85f, 1.0f),
+            RangeBonus = 80.0f,
+            InflictsStatus = Enemies.StatusEffectType.Slow
         }
     };
 

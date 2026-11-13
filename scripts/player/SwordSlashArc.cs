@@ -14,6 +14,7 @@ public partial class SwordSlashArc : Area2D
     public float KnockbackForce { get; set; } = 280.0f;
     public Vector2 SlashDirection { get; set; } = Vector2.Right;
     public float SlashRadius { get; set; } = 54.0f;
+    public Enemies.StatusEffectType InflictedStatus { get; set; } = Enemies.StatusEffectType.None;
 
     private readonly HashSet<Node2D> _hitTargets = new();
     private float _slashProgress = 0.0f; // 0.0 to 1.0
@@ -83,6 +84,10 @@ public partial class SwordSlashArc : Area2D
             Vector2 hitDir = (enemy.GlobalPosition - GlobalPosition).Normalized();
             if (hitDir == Vector2.Zero) hitDir = SlashDirection;
             enemy.ApplyKnockback(hitDir, KnockbackForce);
+
+            // Melee sword naturally inflicts Bleed or inherited elemental status
+            var status = InflictedStatus != Enemies.StatusEffectType.None ? InflictedStatus : Enemies.StatusEffectType.Bleed;
+            enemy.StatusManager?.ApplyEffect(status, 4.0f, Damage * 0.35f);
         }
         else if (body is Environments.RoomObstacle obstacle)
         {
