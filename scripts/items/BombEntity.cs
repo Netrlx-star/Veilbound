@@ -54,6 +54,9 @@ public partial class BombEntity : Node2D
     {
         _exploded = true;
 
+        // Screen trauma shake on bomb blast
+        Systems.CameraShaker.Shake(0.65f);
+
         // Visual blast circle shockwave
         var shockwave = new ColorRect
         {

@@ -12,7 +12,7 @@ public partial class Game : Node2D
     private Player.PlayerController _player;
     private Systems.RoomManager _roomManager;
     private UI.HUD _hud;
-    private Camera2D _camera;
+    private Systems.CameraShaker _camera;
 
     public override void _Ready()
     {
@@ -22,8 +22,8 @@ public partial class Game : Node2D
         _player.GlobalPosition = new Vector2(640, 360); // Center of viewport
         AddChild(_player);
 
-        // Create camera following player
-        _camera = new Camera2D();
+        // Create camera following player with screen trauma shake
+        _camera = new Systems.CameraShaker();
         _camera.Enabled = true;
         _camera.PositionSmoothingEnabled = true;
         _camera.PositionSmoothingSpeed = 12.0f;
