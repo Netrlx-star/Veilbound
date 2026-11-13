@@ -23,6 +23,7 @@ public partial class BaseEnemy : CharacterBody2D
     // ── References ──
     protected Sprite2D Sprite;
     protected CollisionShape2D CollisionShape;
+    public StatusEffectManager StatusManager { get; private set; }
 
     // ── Signals ──
     [Signal] public delegate void EnemyDiedEventHandler();
@@ -34,6 +35,9 @@ public partial class BaseEnemy : CharacterBody2D
 
         Sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
         CollisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+
+        StatusManager = new StatusEffectManager();
+        AddChild(StatusManager);
 
         EnemyReady();
     }
