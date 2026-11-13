@@ -29,7 +29,7 @@ public partial class SwordSlashArc : Area2D
     public override void _Ready()
     {
         CollisionLayer = 0;
-        CollisionMask = 4 | 1; // 4 = enemies, 1 = walls/obstacles
+        CollisionMask = 4 | 1 | 8; // 4 = enemies, 1 = obstacles, 8 = projectiles (or check areas)
 
         _startAngle = SlashDirection.Angle() - _sweepAngle / 2.0f;
 
@@ -46,6 +46,7 @@ public partial class SwordSlashArc : Area2D
         AddChild(collisionShape);
 
         BodyEntered += OnBodyEntered;
+        AreaEntered += OnAreaEntered;
 
         // Animated slash sweep tween
         var tween = CreateTween();
@@ -86,6 +87,21 @@ public partial class SwordSlashArc : Area2D
         else if (body is Environments.RoomObstacle obstacle)
         {
             obstacle.TakeDamage(Damage);
+        }
+    }
+
+    private void OnAreaEntered(Area2D area)
+    {
+        // Deflect/destroy enemy projectiles caught in the blade's sweep (Blasphemy / Casey mechanic)
+        if (area is Enemies.EnemyProjectile projectile)
+        {
+            projectile.IsDeflected = true;
+            projectile.Direction = SlashDirection;
+            projectile.Speed *= 1.4f;
+            projectile.Modulate = new Color(0.4f, 1.0f, 0.9f); // Cyan reflected glow
+
+            // Micro-screenshake on projectile parry
+            Systems.CameraShaker.Shake(0.18f);
         }
     }
 

@@ -11,6 +11,7 @@ public partial class EnemyProjectile : Area2D
     [Export] public float Speed { get; set; } = 220.0f;
     [Export] public int Damage { get; set; } = 1;
     [Export] public float MaxLifetime { get; set; } = 4.0f;
+    public bool IsDeflected { get; set; } = false;
 
     public Vector2 Direction { get; set; } = Vector2.Zero;
 
@@ -45,6 +46,18 @@ public partial class EnemyProjectile : Area2D
         if (body is StaticBody2D)
         {
             QueueFree();
+            return;
+        }
+
+        // If deflected, damages enemies instead of player
+        if (IsDeflected)
+        {
+            if (body is BaseEnemy enemy)
+            {
+                enemy.TakeDamage(Damage * 4.0f); // Heavy reflected damage
+                enemy.ApplyKnockback(Direction, 250.0f);
+                QueueFree();
+            }
             return;
         }
 
