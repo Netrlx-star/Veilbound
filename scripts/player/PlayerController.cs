@@ -95,6 +95,17 @@ public partial class PlayerController : CharacterBody2D
         EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
     }
 
+    public bool UseKey()
+    {
+        if (Stats.Keys > 0)
+        {
+            Stats.Keys--;
+            EmitSignal(SignalName.ConsumablesChanged, Stats.Coins, Stats.Bombs, Stats.Keys);
+            return true;
+        }
+        return false;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         HandleMovement(delta);
@@ -318,6 +329,9 @@ public partial class PlayerController : CharacterBody2D
 
         bool died = Stats.TakeDamage(amount);
         _invincibilityTimer = InvincibilityDuration;
+
+        // Visceral camera trauma on taking damage
+        Systems.CameraShaker.Shake(0.45f);
 
         EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
 

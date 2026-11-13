@@ -129,26 +129,10 @@ public partial class BaseEnemy : CharacterBody2D
         if (player != null)
         {
             player.Stats.EnemiesKilled++;
-            // 20% chance for killed enemy to yield a coin
-            if (GD.Randf() < 0.20f)
-            {
-                player.AddCoins(1);
-            }
         }
 
-        // 35% base chance (increased to 50% if player is injured) to drop a healing heart
-        float heartDropChance = (player != null && player.Stats.CurrentHealth < player.Stats.MaxHealth) ? 0.50f : 0.35f;
-        if (GD.Randf() < heartDropChance)
-        {
-            var heartScene = GD.Load<PackedScene>("res://scenes/items/HeartPickup.tscn");
-            if (heartScene != null)
-            {
-                var heart = heartScene.Instantiate<Items.HeartPickup>();
-                var targetParent = GetParent() ?? (Node)GetTree().CurrentScene;
-                targetParent.CallDeferred(Node.MethodName.AddChild, heart);
-                heart.CallDeferred(nameof(Items.HeartPickup.Initialize), GlobalPosition);
-            }
-        }
+        // Drop system: Hearts, Coins, Bombs, Keys
+        SpawnDrops(player);
 
         // Simple death animation: shrink and fade
         var tween = CreateTween();
@@ -156,5 +140,47 @@ public partial class BaseEnemy : CharacterBody2D
         tween.TweenProperty(this, "scale", Vector2.Zero, 0.3);
         tween.TweenProperty(this, "modulate:a", 0.0f, 0.3);
         tween.Chain().TweenCallback(Callable.From(QueueFree));
+    }
+
+    private void SpawnDrops(Player.PlayerController player)
+    {
+        var targetParent = GetParent() ?? (Node)GetTree().CurrentScene;
+        float roll = GD.Randf();
+
+        // 1. Heart drop: 30% base (45% if hurt)
+        float heartChance = (player != null && player.Stats.CurrentHealth < player.Stats.MaxHealth) ? 0.45f : 0.30f;
+        if (roll < heartChance)
+        {
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Heart, 0, 1);
+            return;
+        }
+
+        // 2. Coin drop: 25% chance
+        if (roll < heartChance + 0.25f)
+        {
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Coin, 0, 1);
+            return;
+        }
+
+        // 3. Bomb drop: 8% chance (refills player's bombs!)
+        if (roll < heartChance + 0.25f + 0.08f)
+        {
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Bomb, 0, 1);
+            return;
+        }
+
+        // 4. Key drop: 8% chance (allows unlocking shops & chests!)
+        if (roll < heartChance + 0.25f + 0.08f + 0.08f)
+        {
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Key, 0, 1);
+        }
     }
 }

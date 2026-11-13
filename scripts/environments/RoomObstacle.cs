@@ -52,22 +52,33 @@ public partial class RoomObstacle : StaticBody2D
 
     private void DestroyObstacle()
     {
-        // 20% chance to drop coin or heart
+        // 35% chance to drop a consumable (Hearts, Coins, Bombs, Keys)
         float dropRoll = GD.Randf();
-        if (dropRoll < 0.15f)
+        var targetParent = GetParent() ?? (Node)GetTree().CurrentScene;
+
+        if (dropRoll < 0.12f)
         {
-            var heartScene = GD.Load<PackedScene>("res://scenes/items/HeartPickup.tscn");
-            if (heartScene != null)
-            {
-                var heart = heartScene.Instantiate<Node2D>();
-                heart.GlobalPosition = GlobalPosition;
-                GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, heart);
-            }
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Coin, 0, 1);
         }
-        else if (dropRoll < 0.30f)
+        else if (dropRoll < 0.22f)
         {
-            var player = GetTree().GetFirstNodeInGroup("player") as Player.PlayerController;
-            player?.AddCoins(1);
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Heart, 0, 1);
+        }
+        else if (dropRoll < 0.28f)
+        {
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Bomb, 0, 1);
+        }
+        else if (dropRoll < 0.35f)
+        {
+            var pickup = new Items.ConsumablePickup();
+            targetParent.CallDeferred(Node.MethodName.AddChild, pickup);
+            pickup.CallDeferred(nameof(Items.ConsumablePickup.Initialize), GlobalPosition, (int)Items.ConsumableType.Key, 0, 1);
         }
 
         // Debris crumbling tween
