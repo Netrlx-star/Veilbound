@@ -105,6 +105,7 @@ public partial class ItemPedestal : Node2D
             {
                 // Equip active item
                 player.SetActiveItem(ActiveItem);
+                UI.HUD.Instance?.ShowItemBanner(ActiveItem.Name, ActiveItem.Description, ActiveItem.ItemColor);
             }
             else if (Item != null)
             {
@@ -124,6 +125,9 @@ public partial class ItemPedestal : Node2D
                     player.Stats.MaxHealth += Item.MaxHealthBonus;
                     player.Heal(Item.MaxHealthBonus);
                 }
+
+                UI.HUD.Instance?.ShowItemBanner(Item.Name, Item.Description, Item.ItemColor);
+                UI.HUD.Instance?.AddPassiveRelic(Item.Name, Item.ItemColor);
             }
 
             player.Stats.ItemsCollected++;

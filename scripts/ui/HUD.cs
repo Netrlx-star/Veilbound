@@ -4,14 +4,17 @@ using System.Collections.Generic;
 namespace Veilbound.UI;
 
 /// <summary>
-/// Advanced in-game HUD inspired by The Binding of Isaac.
-/// Displays modular pixel heart containers, low-health heartbeat pulsation,
-/// consumables (coins, bombs, keys), retractable Character & Controls Drawer (Tab toggle),
-/// minimap, boss health bar, and pause/game-over overlays.
+/// Advanced in-game HUD inspired by The Binding of Isaac, Enter the Gungeon, and Cult of the Lamb.
+/// Features an occult gothic status crest, compact horizontal currency matrix with punch-scale pop,
+/// active item spacebar slot with primed gold pulse, celebratory item discovery banner,
+/// passive relics tray (Extra HUD), and a gothic dual-layer "Ghost Bar" boss health meter.
 /// </summary>
 public partial class HUD : CanvasLayer
 {
-    // ── Health ──
+    public static HUD Instance { get; private set; }
+
+    // ── Status Crest & Health ──
+    private PanelContainer _topLeftPanel;
     private HBoxContainer _heartsContainer;
     private Tween _heartbeatTween;
 
@@ -22,6 +25,27 @@ public partial class HUD : CanvasLayer
     private TextureRect _coinIcon;
     private TextureRect _bombIcon;
     private TextureRect _keyIcon;
+    private int _prevCoins = -1;
+    private int _prevBombs = -1;
+    private int _prevKeys = -1;
+
+    // ── Active Item Slot UI ──
+    private PanelContainer _activeItemContainer;
+    private TextureRect _activeItemIcon;
+    private Label _activeItemNameLabel;
+    private HBoxContainer _chargePipsContainer;
+    private Tween _activeItemPulseTween;
+
+    // ── Grand Item Discovery Splash Banner ──
+    private PanelContainer _itemBanner;
+    private TextureRect _bannerIcon;
+    private Label _bannerTitle;
+    private Label _bannerSubtitle;
+    private Tween _bannerTween;
+
+    // ── Passive Relics Tray (Extra HUD) ──
+    private HFlowContainer _relicsTray;
+    private readonly HashSet<string> _collectedRelics = new();
 
     // ── Retractable Stats & Guide Drawer ──
     private Control _statsDrawer;
@@ -45,18 +69,17 @@ public partial class HUD : CanvasLayer
     private Label _floorLabel;
     private Label _roomsLabel;
 
-    // ── Active Item Slot UI ──
-    private PanelContainer _activeItemPanel;
-    private Label _activeItemNameLabel;
-    private HBoxContainer _chargePipsContainer;
-
     // ── Minimap ──
     private Minimap _minimap;
 
-    // ── Boss Bar ──
+    // ── Boss "Ghost Bar" ──
     private Control _bossBarContainer;
     private Label _bossNameLabel;
+    private Label _bossHPLabel;
     private ProgressBar _bossProgressBar;
+    private ProgressBar _bossGhostBar;
+    private Tween _ghostBarTween;
+    private float _lastBossHealth = -1.0f;
 
     // ── Overlays ──
     private PauseMenu _pauseMenu;
@@ -65,9 +88,31 @@ public partial class HUD : CanvasLayer
 
     public override void _Ready()
     {
+        Instance = this;
+
+        // 1. Style TopLeft Occult Crest
+        _topLeftPanel = GetNodeOrNull<PanelContainer>("TopLeftPanel");
+        if (_topLeftPanel != null)
+        {
+            var crestStyle = new StyleBoxFlat
+            {
+                BgColor = new Color(0.06f, 0.05f, 0.09f, 0.88f),
+                BorderColor = new Color(0.40f, 0.34f, 0.52f, 0.90f),
+                BorderWidthBottom = 2,
+                BorderWidthTop = 2,
+                BorderWidthLeft = 2,
+                BorderWidthRight = 2,
+                CornerRadiusTopLeft = 6,
+                CornerRadiusTopRight = 6,
+                CornerRadiusBottomLeft = 6,
+                CornerRadiusBottomRight = 6
+            };
+            _topLeftPanel.AddThemeStyleboxOverride("panel", crestStyle);
+        }
+
         _heartsContainer = GetNode<HBoxContainer>("%HeartsContainer");
 
-        // Consumables
+        // 2. Consumables Ribbon
         _coinLabel = GetNodeOrNull<Label>("%CoinLabel");
         _bombLabel = GetNodeOrNull<Label>("%BombLabel");
         _keyLabel = GetNodeOrNull<Label>("%KeyLabel");
@@ -79,7 +124,41 @@ public partial class HUD : CanvasLayer
         if (_bombIcon != null) _bombIcon.Texture = Systems.PlaceholderSprite.CreateBombTexture();
         if (_keyIcon != null) _keyIcon.Texture = Systems.PlaceholderSprite.CreateKeyTexture();
 
-        // Stats & Controls Drawer
+        // 3. Active Item Slot
+        _activeItemContainer = GetNodeOrNull<PanelContainer>("%ActiveItemContainer");
+        _activeItemIcon = GetNodeOrNull<TextureRect>("%ActiveItemIcon");
+        _activeItemNameLabel = GetNodeOrNull<Label>("%ActiveItemNameLabel");
+        _chargePipsContainer = GetNodeOrNull<HBoxContainer>("%ChargePipsContainer");
+        StyleActiveItemSlot(false);
+
+        // 4. Grand Item Splash Banner
+        _itemBanner = GetNodeOrNull<PanelContainer>("%ItemBanner");
+        _bannerIcon = GetNodeOrNull<TextureRect>("%BannerIcon");
+        _bannerTitle = GetNodeOrNull<Label>("%BannerTitle");
+        _bannerSubtitle = GetNodeOrNull<Label>("%BannerSubtitle");
+        if (_itemBanner != null)
+        {
+            var bannerStyle = new StyleBoxFlat
+            {
+                BgColor = new Color(0.07f, 0.04f, 0.12f, 0.94f),
+                BorderColor = new Color(0.95f, 0.78f, 0.25f, 0.95f),
+                BorderWidthBottom = 2,
+                BorderWidthTop = 2,
+                BorderWidthLeft = 2,
+                BorderWidthRight = 2,
+                CornerRadiusTopLeft = 6,
+                CornerRadiusTopRight = 6,
+                CornerRadiusBottomLeft = 6,
+                CornerRadiusBottomRight = 6
+            };
+            _itemBanner.AddThemeStyleboxOverride("panel", bannerStyle);
+            _itemBanner.Visible = false;
+        }
+
+        // 5. Relics Tray (Extra HUD)
+        _relicsTray = GetNodeOrNull<HFlowContainer>("%RelicsTray");
+
+        // 6. Stats & Controls Drawer
         _statsDrawer = GetNodeOrNull<Control>("%StatsDrawer");
         _drawerTabButton = GetNodeOrNull<Button>("%DrawerTabButton");
         _damageLabel = GetNodeOrNull<Label>("%DamageLabel");
@@ -91,26 +170,22 @@ public partial class HUD : CanvasLayer
         _bombGuideLabel = GetNodeOrNull<Label>("%BombGuideLabel");
         _openSettingsBtn = GetNodeOrNull<Button>("%OpenSettingsBtn");
 
-        if (_drawerTabButton != null)
-        {
-            _drawerTabButton.Pressed += ToggleStatsDrawer;
-        }
+        if (_drawerTabButton != null) _drawerTabButton.Pressed += ToggleStatsDrawer;
+        if (_openSettingsBtn != null) _openSettingsBtn.Pressed += () => _settingsMenu?.Open();
 
-        if (_openSettingsBtn != null)
-        {
-            _openSettingsBtn.Pressed += () => _settingsMenu?.Open();
-        }
-
-        // Floor info
+        // 7. Floor info
         _floorLabel = GetNode<Label>("%FloorLabel");
         _roomsLabel = GetNode<Label>("%RoomsLabel");
 
-        // Minimap & Boss
+        // 8. Minimap & Boss Ghost Bar
         _minimap = GetNodeOrNull<Minimap>("%Minimap");
         _bossBarContainer = GetNodeOrNull<Control>("%BossBarContainer");
         _bossNameLabel = GetNodeOrNull<Label>("%BossNameLabel");
+        _bossHPLabel = GetNodeOrNull<Label>("%BossHPLabel");
         _bossProgressBar = GetNodeOrNull<ProgressBar>("%BossProgressBar");
-        if (_bossBarContainer != null) _bossBarContainer.Visible = false;
+        _bossGhostBar = GetNodeOrNull<ProgressBar>("%BossGhostBar");
+
+        SetupBossBars();
 
         // Overlays
         _pauseMenu = GetNodeOrNull<PauseMenu>("%PauseMenu");
@@ -121,22 +196,17 @@ public partial class HUD : CanvasLayer
         UpdateRoomsDisplay(0);
         UpdateConsumables(0, 1, 1);
         UpdateControlsGuide();
-        BuildActiveItemUI();
+        UpdateActiveItem("None", 0, 0);
     }
 
-    private void BuildActiveItemUI()
+    private void StyleActiveItemSlot(bool isPrimed)
     {
-        _activeItemPanel = new PanelContainer
-        {
-            Name = "ActiveItemPanel",
-            Position = new Vector2(16, 120),
-            CustomMinimumSize = new Vector2(140, 52)
-        };
+        if (_activeItemContainer == null) return;
 
         var style = new StyleBoxFlat
         {
-            BgColor = new Color(0.1f, 0.08f, 0.14f, 0.85f),
-            BorderColor = new Color(0.45f, 0.4f, 0.6f, 0.9f),
+            BgColor = new Color(0.12f, 0.09f, 0.16f, 0.88f),
+            BorderColor = isPrimed ? new Color(1.0f, 0.85f, 0.2f, 0.95f) : new Color(0.35f, 0.30f, 0.45f, 0.80f),
             BorderWidthBottom = 2,
             BorderWidthTop = 2,
             BorderWidthLeft = 2,
@@ -146,33 +216,85 @@ public partial class HUD : CanvasLayer
             CornerRadiusBottomLeft = 4,
             CornerRadiusBottomRight = 4
         };
-        _activeItemPanel.AddThemeStyleboxOverride("panel", style);
-
-        var vbox = new VBoxContainer();
-        _activeItemNameLabel = new Label
-        {
-            Text = "[SPACE] None",
-            HorizontalAlignment = HorizontalAlignment.Center
-        };
-        _activeItemNameLabel.AddThemeFontSizeOverride("font_size", 11);
-        _activeItemNameLabel.AddThemeColorOverride("font_color", new Color(0.9f, 0.9f, 0.95f));
-        vbox.AddChild(_activeItemNameLabel);
-
-        _chargePipsContainer = new HBoxContainer
-        {
-            Alignment = BoxContainer.AlignmentMode.Center
-        };
-        vbox.AddChild(_chargePipsContainer);
-
-        _activeItemPanel.AddChild(vbox);
-        AddChild(_activeItemPanel);
+        _activeItemContainer.AddThemeStyleboxOverride("panel", style);
     }
+
+    private void SetupBossBars()
+    {
+        if (_bossBarContainer != null) _bossBarContainer.Visible = false;
+
+        // Front bar: Deep crimson blood
+        if (_bossProgressBar != null)
+        {
+            var frontFill = new StyleBoxFlat
+            {
+                BgColor = new Color(0.85f, 0.15f, 0.22f, 1.0f),
+                CornerRadiusTopLeft = 3,
+                CornerRadiusTopRight = 3,
+                CornerRadiusBottomLeft = 3,
+                CornerRadiusBottomRight = 3
+            };
+            var emptyBg = new StyleBoxFlat { BgColor = Colors.Transparent };
+            _bossProgressBar.AddThemeStyleboxOverride("fill", frontFill);
+            _bossProgressBar.AddThemeStyleboxOverride("background", emptyBg);
+        }
+
+        // Ghost bar: Trailing amber damage chip
+        if (_bossGhostBar != null)
+        {
+            var ghostFill = new StyleBoxFlat
+            {
+                BgColor = new Color(0.95f, 0.75f, 0.35f, 0.95f),
+                CornerRadiusTopLeft = 3,
+                CornerRadiusTopRight = 3,
+                CornerRadiusBottomLeft = 3,
+                CornerRadiusBottomRight = 3
+            };
+            var ghostBg = new StyleBoxFlat
+            {
+                BgColor = new Color(0.08f, 0.06f, 0.10f, 0.90f),
+                BorderColor = new Color(0.40f, 0.32f, 0.45f, 0.90f),
+                BorderWidthBottom = 1,
+                BorderWidthTop = 1,
+                BorderWidthLeft = 1,
+                BorderWidthRight = 1,
+                CornerRadiusTopLeft = 4,
+                CornerRadiusTopRight = 4,
+                CornerRadiusBottomLeft = 4,
+                CornerRadiusBottomRight = 4
+            };
+            _bossGhostBar.AddThemeStyleboxOverride("fill", ghostFill);
+            _bossGhostBar.AddThemeStyleboxOverride("background", ghostBg);
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    //  ACTIVE ITEM & PRIMED CHARGE PULSE
+    // ══════════════════════════════════════════════
 
     public void UpdateActiveItem(string name, int currentCharges, int maxCharges)
     {
         if (_activeItemNameLabel == null || _chargePipsContainer == null) return;
 
-        _activeItemNameLabel.Text = $"[SPACE] {name}";
+        bool isPrimed = maxCharges > 0 && currentCharges >= maxCharges;
+        _activeItemNameLabel.Text = isPrimed ? $"[SPACE] {name} (PRIMED!)" : $"[SPACE] {name}";
+
+        StyleActiveItemSlot(isPrimed);
+
+        _activeItemPulseTween?.Kill();
+        if (isPrimed)
+        {
+            // Radiant golden pulsation when spacebar is primed!
+            _activeItemPulseTween = CreateTween().SetLoops();
+            _activeItemPulseTween.TweenProperty(_activeItemContainer, "scale", new Vector2(1.05f, 1.05f), 0.35)
+                .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+            _activeItemPulseTween.TweenProperty(_activeItemContainer, "scale", Vector2.One, 0.35)
+                .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+        }
+        else if (_activeItemContainer != null)
+        {
+            _activeItemContainer.Scale = Vector2.One;
+        }
 
         foreach (Node child in _chargePipsContainer.GetChildren())
         {
@@ -185,76 +307,98 @@ public partial class HUD : CanvasLayer
         {
             var pip = new ColorRect
             {
-                CustomMinimumSize = new Vector2(14, 8),
-                Color = i < currentCharges ? new Color(0.2f, 0.95f, 0.35f) : new Color(0.25f, 0.25f, 0.3f, 0.7f)
+                CustomMinimumSize = new Vector2(16, 8),
+                Color = i < currentCharges ? new Color(0.20f, 0.95f, 0.40f) : new Color(0.22f, 0.20f, 0.28f, 0.8f)
             };
             _chargePipsContainer.AddChild(pip);
         }
     }
 
-    public override void _Input(InputEvent @event)
+    // ══════════════════════════════════════════════
+    //  GRAND ITEM DISCOVERY BANNER (ISAAC/GUNGEON SPLASH)
+    // ══════════════════════════════════════════════
+
+    public void ShowItemBanner(string title, string subtitle, Color color, Texture2D icon = null)
     {
-        if (@event.IsActionPressed("toggle_stats"))
+        if (_itemBanner == null) return;
+
+        _bannerTitle.Text = title.ToUpper();
+        _bannerSubtitle.Text = subtitle;
+
+        if (_bannerIcon != null)
         {
-            ToggleStatsDrawer();
-            GetViewport().SetInputAsHandled();
+            _bannerIcon.Texture = icon ?? Systems.PlaceholderSprite.CreateCircleTexture(14, color);
         }
-    }
 
-    // ══════════════════════════════════════════════
-    //  RETRACTABLE STATS & CONTROLS DRAWER
-    // ══════════════════════════════════════════════
+        _bannerTween?.Kill();
+        _itemBanner.Visible = true;
+        _itemBanner.Modulate = new Color(1, 1, 1, 0);
+        _itemBanner.Position = new Vector2(_itemBanner.Position.X, 35);
 
-    public void ToggleStatsDrawer()
-    {
-        if (_statsDrawer == null) return;
-        _isDrawerOpen = !_isDrawerOpen;
-
-        _drawerTween?.Kill();
-        _drawerTween = CreateTween().SetParallel(true);
-
-        float targetX = _isDrawerOpen ? 0.0f : -205.0f; // slides out or retracts
-        _drawerTween.TweenProperty(_statsDrawer, "position:x", targetX, 0.25)
+        _bannerTween = CreateTween();
+        // 1. Slide down with bounce
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "position:y", 85.0f, 0.25)
             .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "modulate:a", 1.0f, 0.20);
 
-        if (_drawerTabButton != null)
-        {
-            _drawerTabButton.Text = _isDrawerOpen ? "◀" : "▶ STATS";
-        }
+        // 2. Hang proudly in view
+        _bannerTween.TweenInterval(2.2);
 
-        if (_isDrawerOpen)
-        {
-            UpdateControlsGuide();
-        }
+        // 3. Slide up and fade out smoothly
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "position:y", 40.0f, 0.35)
+            .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.In);
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "modulate:a", 0.0f, 0.35);
+        _bannerTween.Chain().TweenCallback(Callable.From(() => _itemBanner.Visible = false));
+
+        Systems.CameraShaker.Shake(0.12f);
     }
 
-    private void UpdateControlsGuide()
+    // ══════════════════════════════════════════════
+    //  PASSIVE RELICS TRAY (EXTRA HUD)
+    // ══════════════════════════════════════════════
+
+    public void AddPassiveRelic(string name, Color color)
     {
-        var sm = Systems.SettingsManager.Instance;
-        if (sm == null) return;
+        if (_relicsTray == null || _collectedRelics.Contains(name)) return;
+        _collectedRelics.Add(name);
 
-        if (_moveGuideLabel != null)
-            _moveGuideLabel.Text = $"Move: {sm.GetActionKeyName("move_up")}/{sm.GetActionKeyName("move_left")}/{sm.GetActionKeyName("move_down")}/{sm.GetActionKeyName("move_right")}";
-
-        if (_shootGuideLabel != null)
+        var badge = new PanelContainer
         {
-            var mode = sm.ShootingMode;
-            if (mode == Systems.ShootingControlMode.SingleButton)
-            {
-                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_facing")} (Walk Dir)";
-            }
-            else if (mode == Systems.ShootingControlMode.FourWay)
-            {
-                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_up")}/{sm.GetActionKeyName("shoot_left")}/{sm.GetActionKeyName("shoot_down")}/{sm.GetActionKeyName("shoot_right")}";
-            }
-            else // Hybrid
-            {
-                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_facing")} (Walk) or Arrows";
-            }
-        }
+            CustomMinimumSize = new Vector2(24, 24),
+            TooltipText = name
+        };
 
-        if (_bombGuideLabel != null)
-            _bombGuideLabel.Text = $"Bomb: {sm.GetActionKeyName("place_bomb")}";
+        var badgeStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0.12f, 0.09f, 0.16f, 0.90f),
+            BorderColor = color,
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4
+        };
+        badge.AddThemeStyleboxOverride("panel", badgeStyle);
+
+        var iconRect = new TextureRect
+        {
+            Texture = Systems.PlaceholderSprite.CreateCircleTexture(7, color),
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter
+        };
+        badge.AddChild(iconRect);
+
+        _relicsTray.AddChild(badge);
+
+        // Bouncy pop-in animation
+        badge.Scale = Vector2.Zero;
+        var tween = badge.CreateTween();
+        tween.TweenProperty(badge, "scale", Vector2.One, 0.25)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
     }
 
     // ══════════════════════════════════════════════
@@ -282,7 +426,7 @@ public partial class HUD : CanvasLayer
             var heartRect = new TextureRect
             {
                 Texture = Systems.PlaceholderSprite.CreateHeartTexture(state),
-                CustomMinimumSize = new Vector2(28, 24),
+                CustomMinimumSize = new Vector2(26, 22),
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize
             };
@@ -317,14 +461,49 @@ public partial class HUD : CanvasLayer
     }
 
     // ══════════════════════════════════════════════
-    //  CONSUMABLES & STATS
+    //  CONSUMABLES & PUNCH-SCALE TWEENS
     // ══════════════════════════════════════════════
 
     public void UpdateConsumables(int coins, int bombs, int keys)
     {
-        if (_coinLabel != null) _coinLabel.Text = coins.ToString("D2");
-        if (_bombLabel != null) _bombLabel.Text = bombs.ToString("D2");
-        if (_keyLabel != null) _keyLabel.Text = keys.ToString("D2");
+        if (_coinLabel != null)
+        {
+            _coinLabel.Text = coins.ToString("D2");
+            if (_prevCoins != -1 && coins > _prevCoins) AnimatePickupPop(_coinIcon, _coinLabel);
+            _prevCoins = coins;
+        }
+
+        if (_bombLabel != null)
+        {
+            _bombLabel.Text = bombs.ToString("D2");
+            if (_prevBombs != -1 && bombs > _prevBombs) AnimatePickupPop(_bombIcon, _bombLabel);
+            _prevBombs = bombs;
+        }
+
+        if (_keyLabel != null)
+        {
+            _keyLabel.Text = keys.ToString("D2");
+            if (_prevKeys != -1 && keys > _prevKeys) AnimatePickupPop(_keyIcon, _keyLabel);
+            _prevKeys = keys;
+        }
+    }
+
+    private void AnimatePickupPop(Control icon, Control label)
+    {
+        if (icon != null)
+        {
+            var tween = icon.CreateTween();
+            tween.TweenProperty(icon, "scale", new Vector2(1.4f, 1.4f), 0.08);
+            tween.TweenProperty(icon, "scale", Vector2.One, 0.12)
+                .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+        }
+        if (label != null)
+        {
+            var tween = label.CreateTween();
+            tween.TweenProperty(label, "scale", new Vector2(1.3f, 1.3f), 0.08);
+            tween.TweenProperty(label, "scale", Vector2.One, 0.12)
+                .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+        }
     }
 
     public void UpdateStats(float damage, float fireRate, float speed, float range)
@@ -351,24 +530,114 @@ public partial class HUD : CanvasLayer
     }
 
     // ══════════════════════════════════════════════
-    //  BOSS BAR & OVERLAYS
+    //  GOTHIC DUAL-LAYER GHOST BAR BOSS METER
     // ══════════════════════════════════════════════
 
     public void ShowBossBar(string name, float current, float max)
     {
         if (_bossBarContainer == null) return;
         _bossBarContainer.Visible = true;
-        if (_bossNameLabel != null) _bossNameLabel.Text = name;
-        if (_bossProgressBar != null)
+
+        if (_bossNameLabel != null) _bossNameLabel.Text = $"💀  {name.ToUpper()}  💀";
+        if (_bossHPLabel != null) _bossHPLabel.Text = $"{Mathf.Max(0, (int)current)} / {(int)max} HP";
+
+        if (_bossProgressBar != null && _bossGhostBar != null)
         {
             _bossProgressBar.MaxValue = max;
+            _bossGhostBar.MaxValue = max;
+
+            bool isDamage = _lastBossHealth > 0 && current < _lastBossHealth;
             _bossProgressBar.Value = current;
+
+            if (isDamage)
+            {
+                // Instant red drop, delayed amber ghost bar catchup!
+                _ghostBarTween?.Kill();
+                _ghostBarTween = CreateTween();
+                _ghostBarTween.TweenInterval(0.25);
+                _ghostBarTween.TweenProperty(_bossGhostBar, "value", current, 0.35)
+                    .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+
+                // Micro horizontal jitter shake on boss bar
+                var shakeTween = _bossBarContainer.CreateTween();
+                shakeTween.TweenProperty(_bossBarContainer, "position:x", _bossBarContainer.Position.X - 3.0f, 0.04);
+                shakeTween.TweenProperty(_bossBarContainer, "position:x", _bossBarContainer.Position.X + 3.0f, 0.04);
+                shakeTween.TweenProperty(_bossBarContainer, "position:x", _bossBarContainer.Position.X, 0.04);
+            }
+            else
+            {
+                _bossGhostBar.Value = current;
+            }
+
+            _lastBossHealth = current;
         }
     }
 
     public void HideBossBar()
     {
         if (_bossBarContainer != null) _bossBarContainer.Visible = false;
+        _lastBossHealth = -1.0f;
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (@event.IsActionPressed("toggle_stats"))
+        {
+            ToggleStatsDrawer();
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
+    public void ToggleStatsDrawer()
+    {
+        if (_statsDrawer == null) return;
+        _isDrawerOpen = !_isDrawerOpen;
+
+        _drawerTween?.Kill();
+        _drawerTween = CreateTween().SetParallel(true);
+
+        float targetX = _isDrawerOpen ? 0.0f : -205.0f;
+        _drawerTween.TweenProperty(_statsDrawer, "position:x", targetX, 0.25)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+
+        if (_drawerTabButton != null)
+        {
+            _drawerTabButton.Text = _isDrawerOpen ? "◀" : "▶ STATS";
+        }
+
+        if (_isDrawerOpen)
+        {
+            UpdateControlsGuide();
+        }
+    }
+
+    private void UpdateControlsGuide()
+    {
+        var sm = Systems.SettingsManager.Instance;
+        if (sm == null) return;
+
+        if (_moveGuideLabel != null)
+            _moveGuideLabel.Text = $"Move: {sm.GetActionKeyName("move_up")}/{sm.GetActionKeyName("move_left")}/{sm.GetActionKeyName("move_down")}/{sm.GetActionKeyName("move_right")}";
+
+        if (_shootGuideLabel != null)
+        {
+            var mode = sm.ShootingMode;
+            if (mode == Systems.ShootingControlMode.SingleButton)
+            {
+                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_facing")} (Walk Dir)";
+            }
+            else if (mode == Systems.ShootingControlMode.FourWay)
+            {
+                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_up")}/{sm.GetActionKeyName("shoot_left")}/{sm.GetActionKeyName("shoot_down")}/{sm.GetActionKeyName("shoot_right")}";
+            }
+            else
+            {
+                _shootGuideLabel.Text = $"Shoot: {sm.GetActionKeyName("shoot_facing")} (Walk) or Arrows";
+            }
+        }
+
+        if (_bombGuideLabel != null)
+            _bombGuideLabel.Text = $"Bomb: {sm.GetActionKeyName("place_bomb")}";
     }
 
     public void TogglePauseMenu()

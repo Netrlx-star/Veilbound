@@ -10,85 +10,131 @@
 layer = 10
 script = ExtResource("1_hud")
 
-[node name="TopLeftPanel" type="MarginContainer" parent="."]
+[node name="TopLeftPanel" type="PanelContainer" parent="."]
 offset_left = 16.0
 offset_top = 14.0
-offset_right = 320.0
-offset_bottom = 165.0
+offset_right = 268.0
+offset_bottom = 148.0
 
-[node name="StatusVBox" type="VBoxContainer" parent="TopLeftPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="TopLeftPanel"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
 
-[node name="HeartsContainer" type="HBoxContainer" parent="TopLeftPanel/StatusVBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 26)
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="ConsumablesPanel" type="VBoxContainer" parent="TopLeftPanel/StatusVBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="CoinRow" type="HBoxContainer" parent="TopLeftPanel/StatusVBox/ConsumablesPanel"]
+[node name="StatusVBox" type="VBoxContainer" parent="TopLeftPanel/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="CoinIcon" type="TextureRect" parent="TopLeftPanel/StatusVBox/ConsumablesPanel/CoinRow"]
+[node name="HeartsContainer" type="HBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ConsumablesPanel" type="HBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="CoinRow" type="HBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="CoinIcon" type="TextureRect" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel/CoinRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 stretch_mode = 3
 
-[node name="CoinLabel" type="Label" parent="TopLeftPanel/StatusVBox/ConsumablesPanel/CoinRow"]
+[node name="CoinLabel" type="Label" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel/CoinRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 13
 text = "00"
 
-[node name="BombRow" type="HBoxContainer" parent="TopLeftPanel/StatusVBox/ConsumablesPanel"]
+[node name="BombRow" type="HBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 5
 
-[node name="BombIcon" type="TextureRect" parent="TopLeftPanel/StatusVBox/ConsumablesPanel/BombRow"]
+[node name="BombIcon" type="TextureRect" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel/BombRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 stretch_mode = 3
 
-[node name="BombLabel" type="Label" parent="TopLeftPanel/StatusVBox/ConsumablesPanel/BombRow"]
+[node name="BombLabel" type="Label" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel/BombRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_font_sizes/font_size = 13
 text = "01"
 
-[node name="KeyRow" type="HBoxContainer" parent="TopLeftPanel/StatusVBox/ConsumablesPanel"]
+[node name="KeyRow" type="HBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 5
 
-[node name="KeyIcon" type="TextureRect" parent="TopLeftPanel/StatusVBox/ConsumablesPanel/KeyRow"]
+[node name="KeyIcon" type="TextureRect" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel/KeyRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 stretch_mode = 3
 
-[node name="KeyLabel" type="Label" parent="TopLeftPanel/StatusVBox/ConsumablesPanel/KeyRow"]
+[node name="KeyLabel" type="Label" parent="TopLeftPanel/MarginContainer/StatusVBox/ConsumablesPanel/KeyRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
 theme_override_font_sizes/font_size = 13
 text = "01"
 
+[node name="ActiveItemContainer" type="PanelContainer" parent="TopLeftPanel/MarginContainer/StatusVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 42)
+
+[node name="ActiveItemMargin" type="MarginContainer" parent="TopLeftPanel/MarginContainer/StatusVBox/ActiveItemContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="ActiveItemHBox" type="HBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox/ActiveItemContainer/ActiveItemMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ActiveItemIcon" type="TextureRect" parent="TopLeftPanel/MarginContainer/StatusVBox/ActiveItemContainer/ActiveItemMargin/ActiveItemHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="ActiveItemDetails" type="VBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox/ActiveItemContainer/ActiveItemMargin/ActiveItemHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="ActiveItemNameLabel" type="Label" parent="TopLeftPanel/MarginContainer/StatusVBox/ActiveItemContainer/ActiveItemMargin/ActiveItemHBox/ActiveItemDetails"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 11
+text = "[SPACE] None"
+
+[node name="ChargePipsContainer" type="HBoxContainer" parent="TopLeftPanel/MarginContainer/StatusVBox/ActiveItemContainer/ActiveItemMargin/ActiveItemHBox/ActiveItemDetails"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 3
+
 [node name="TopRightPanel" type="MarginContainer" parent="."]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -280.0
+offset_left = -300.0
 offset_top = 10.0
 offset_right = -16.0
-offset_bottom = 160.0
+offset_bottom = 220.0
 grow_horizontal = 0
 
 [node name="RightHBox" type="HBoxContainer" parent="TopRightPanel"]
@@ -117,12 +163,24 @@ theme_override_font_sizes/font_size = 14
 text = "Rooms: 0"
 horizontal_alignment = 2
 
-[node name="MinimapContainer" type="MarginContainer" parent="TopRightPanel/RightHBox"]
+[node name="MinimapVBox" type="VBoxContainer" parent="TopRightPanel/RightHBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MinimapContainer" type="MarginContainer" parent="TopRightPanel/RightHBox/MinimapVBox"]
 layout_mode = 2
 
-[node name="Minimap" parent="TopRightPanel/RightHBox/MinimapContainer" instance=ExtResource("2_minimap")]
+[node name="Minimap" parent="TopRightPanel/RightHBox/MinimapVBox/MinimapContainer" instance=ExtResource("2_minimap")]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="RelicsTray" type="HFlowContainer" parent="TopRightPanel/RightHBox/MinimapVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 24)
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+alignment = 2
 
 [node name="StatsDrawer" type="Control" parent="."]
 unique_name_in_owner = true
@@ -149,48 +207,50 @@ theme_override_constants/margin_bottom = 10
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="StatsHeader" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+[node name="DrawerTitle" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.8, 0.4, 1)
+theme_override_colors/font_color = Color(0.9, 0.85, 0.5, 1)
 theme_override_font_sizes/font_size = 13
 text = "CHARACTER STATS"
+
+[node name="HSeparator" type="HSeparator" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
 
 [node name="DamageLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 12
 text = "DMG: 3.5"
 
 [node name="TearsLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "RATE: 2.5/s"
+text = "TEARS: 2.5/s"
 
 [node name="SpeedLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 12
 text = "SPD: 1.00"
 
 [node name="RangeLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
 theme_override_font_sizes/font_size = 12
 text = "RNG: 300"
 
-[node name="HSeparator" type="HSeparator" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+[node name="HSeparator2" type="HSeparator" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="GuideHeader" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+[node name="ControlsTitle" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.8, 0.4, 1)
+theme_override_colors/font_color = Color(0.9, 0.85, 0.5, 1)
 theme_override_font_sizes/font_size = 13
-text = "ACTIONS & KEYS"
+text = "CONTROLS"
+
+[node name="HSeparator3" type="HSeparator" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
 
 [node name="MoveGuideLabel" type="Label" parent="StatsDrawer/DrawerPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
@@ -229,6 +289,56 @@ offset_bottom = 44.0
 theme_override_font_sizes/font_size = 11
 text = "▶ STATS"
 
+[node name="ItemBanner" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -210.0
+offset_top = 80.0
+offset_right = 210.0
+offset_bottom = 144.0
+grow_horizontal = 2
+
+[node name="BannerMargin" type="MarginContainer" parent="ItemBanner"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="BannerHBox" type="HBoxContainer" parent="ItemBanner/BannerMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BannerIcon" type="TextureRect" parent="ItemBanner/BannerMargin/BannerHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="BannerVBox" type="VBoxContainer" parent="ItemBanner/BannerMargin/BannerHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="BannerTitle" type="Label" parent="ItemBanner/BannerMargin/BannerHBox/BannerVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.25, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.95)
+theme_override_font_sizes/font_size = 14
+text = "ITEM TITLE"
+
+[node name="BannerSubtitle" type="Label" parent="ItemBanner/BannerMargin/BannerHBox/BannerVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.95)
+theme_override_font_sizes/font_size = 11
+text = "Item description flavor text"
+
 [node name="BossBarContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true
 visible = false
@@ -237,10 +347,10 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -200.0
-offset_top = -65.0
-offset_right = 200.0
-offset_bottom = -15.0
+offset_left = -220.0
+offset_top = -68.0
+offset_right = 220.0
+offset_bottom = -14.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 4
@@ -248,17 +358,52 @@ theme_override_constants/separation = 4
 [node name="BossNameLabel" type="Label" parent="BossBarContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.3, 0.35, 1)
+theme_override_colors/font_color = Color(0.95, 0.35, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.95)
 theme_override_font_sizes/font_size = 14
-text = "VEIL GOLIATH"
+text = "💀 VEIL GOLIATH 💀"
 horizontal_alignment = 1
 
-[node name="BossProgressBar" type="ProgressBar" parent="BossBarContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(400, 16)
+[node name="BarStack" type="Control" parent="BossBarContainer"]
+custom_minimum_size = Vector2(440, 18)
 layout_mode = 2
+
+[node name="BossGhostBar" type="ProgressBar" parent="BossBarContainer/BarStack"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 value = 100.0
 show_percentage = false
+
+[node name="BossProgressBar" type="ProgressBar" parent="BossBarContainer/BarStack"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+value = 100.0
+show_percentage = false
+
+[node name="BossHPLabel" type="Label" parent="BossBarContainer/BarStack"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.95)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.95)
+theme_override_font_sizes/font_size = 11
+text = "80 / 80"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="PauseMenu" parent="." instance=ExtResource("3_pause")]
 unique_name_in_owner = true
