@@ -14,6 +14,7 @@ public static class AtmosphereGenerator
     private static Texture2D _bossVignetteTexture;
     private static Texture2D _wallShadowTexture;
     private static Texture2D _altarTexture;
+    private static Texture2D _torchSconceTexture;
 
     /// <summary>
     /// Smooth radial vignette gradient that darkens edges and focuses light on the center.
@@ -229,5 +230,144 @@ public static class AtmosphereGenerator
             ContentMarginBottom = 8
         };
         return style;
+    }
+
+    /// <summary>
+    /// Generates a pixel-art wrought iron wall sconce with wooden torch.
+    /// </summary>
+    public static Texture2D GetTorchSconceTexture()
+    {
+        if (_torchSconceTexture != null) return _torchSconceTexture;
+
+        const int w = 12;
+        const int h = 20;
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+
+        var ironDark = new Color(0.12f, 0.10f, 0.16f);
+        var ironLight = new Color(0.38f, 0.34f, 0.44f);
+        var woodShaft = new Color(0.44f, 0.28f, 0.16f);
+        var fireGold = new Color(1.0f, 0.88f, 0.32f);
+        var fireOrange = new Color(0.95f, 0.46f, 0.16f);
+
+        // Flame tip & core (Y: 1 to 5)
+        img.SetPixel(5, 1, fireGold);
+        img.SetPixel(6, 1, fireGold);
+        for (int x = 4; x <= 7; x++) img.SetPixel(x, 2, fireGold);
+        for (int x = 3; x <= 8; x++) img.SetPixel(x, 3, fireOrange);
+        for (int x = 4; x <= 7; x++) img.SetPixel(x, 4, fireOrange);
+
+        // Torch head / bronze cup (Y: 5 to 7)
+        for (int x = 3; x <= 8; x++)
+        {
+            img.SetPixel(x, 5, ironLight);
+            img.SetPixel(x, 6, ironDark);
+        }
+
+        // Wooden stick shaft (Y: 7 to 14)
+        for (int y = 7; y <= 14; y++)
+        {
+            img.SetPixel(5, y, woodShaft);
+            img.SetPixel(6, y, woodShaft.Darkened(0.2f));
+        }
+
+        // Wall sconce bracket (Y: 11 to 18)
+        for (int y = 11; y <= 18; y++)
+        {
+            img.SetPixel(4, y, ironDark);
+            img.SetPixel(7, y, ironLight);
+        }
+        for (int x = 3; x <= 8; x++)
+        {
+            img.SetPixel(x, 15, ironDark);
+            img.SetPixel(x, 16, ironLight);
+        }
+
+        _torchSconceTexture = ImageTexture.CreateFromImage(img);
+        return _torchSconceTexture;
+    }
+
+    /// <summary>
+    /// Soft radial light gradient pool for torches and lamps.
+    /// </summary>
+    public static Texture2D CreateRadialLightTexture(Color flameColor)
+    {
+        var grad = new Gradient();
+        grad.AddPoint(0.0f, new Color(flameColor.R, flameColor.G, flameColor.B, 0.45f));
+        grad.AddPoint(0.35f, new Color(flameColor.R, flameColor.G, flameColor.B, 0.20f));
+        grad.AddPoint(0.70f, new Color(flameColor.R, flameColor.G, flameColor.B, 0.05f));
+        grad.AddPoint(1.0f, new Color(0, 0, 0, 0));
+
+        var tex = new GradientTexture2D
+        {
+            Gradient = grad,
+            Fill = GradientTexture2D.FillEnum.Radial,
+            FillFrom = new Vector2(0.5f, 0.5f),
+            FillTo = new Vector2(1.0f, 1.0f),
+            Width = 160,
+            Height = 160
+        };
+        return tex;
+    }
+
+    /// <summary>
+    /// Creates a complete Wall Torch instance with sconce, dancing embers, and organic light flicker.
+    /// </summary>
+    public static Node2D CreateWallTorch(Vector2 position, Color flameColor)
+    {
+        var torch = new Node2D { Position = position, Name = "WallTorch" };
+
+        // 1. Soft radial light glow on the wall and floor
+        var glow = new TextureRect
+        {
+            Texture = CreateRadialLightTexture(flameColor),
+            Position = new Vector2(-80, -75),
+            Size = new Vector2(160, 160),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.Scale,
+            ZIndex = -1,
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
+        torch.AddChild(glow);
+
+        // 2. Iron Sconce Bracket
+        var sconce = new TextureRect
+        {
+            Texture = GetTorchSconceTexture(),
+            Position = new Vector2(-6, -10),
+            Size = new Vector2(12, 20),
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            ZIndex = 1,
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
+        torch.AddChild(sconce);
+
+        // 3. Dancing flame embers
+        var embers = new CpuParticles2D
+        {
+            Amount = 5,
+            Lifetime = 0.65,
+            Preprocess = 0.3,
+            Position = new Vector2(0, -6),
+            Direction = new Vector2(0, -1),
+            Spread = 22.0f,
+            Gravity = new Vector2(0, -20.0f),
+            InitialVelocityMin = 14.0f,
+            InitialVelocityMax = 30.0f,
+            ScaleAmountMin = 1.0f,
+            ScaleAmountMax = 2.2f,
+            Color = flameColor,
+            ZIndex = 2
+        };
+        torch.AddChild(embers);
+
+        // 4. Smooth organic light flicker tween
+        var tween = torch.CreateTween().SetLoops();
+        tween.TweenProperty(glow, "modulate:a", 0.62f, 0.11);
+        tween.TweenProperty(glow, "modulate:a", 0.95f, 0.13);
+        tween.TweenProperty(glow, "modulate:a", 0.70f, 0.09);
+        tween.TweenProperty(glow, "modulate:a", 0.88f, 0.12);
+
+        return torch;
     }
 }

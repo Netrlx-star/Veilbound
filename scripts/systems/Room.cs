@@ -224,7 +224,21 @@ public partial class Room : Node2D
         var dustParticles = AtmosphereGenerator.CreateAmbientDustParticles(new Vector2(RoomWidth, RoomHeight), dustTint, 26);
         _atmosphereContainer.AddChild(dustParticles);
 
-        // 3. Radial Darkness Vignette (Smooth ambient occlusion towards room borders)
+        // 3. Wall Mounted Sconces & Torches (Flickering dynamic illumination)
+        Color torchFlame = (RoomType == 2)
+            ? new Color(0.95f, 0.28f, 0.20f)  // Ominous boss crimson flame
+            : (RoomType == 4)
+                ? new Color(1.0f, 0.88f, 0.35f) // Warm golden bazaar candle
+                : (Theme == RoomThemeType.Spaceship)
+                    ? new Color(0.35f, 0.85f, 1.0f) // Cyan sci-fi plasma beacon
+                    : new Color(1.0f, 0.65f, 0.22f); // Authentic dungeon wood torch
+
+        var leftTorch = AtmosphereGenerator.CreateWallTorch(new Vector2(240.0f, 26.0f), torchFlame);
+        var rightTorch = AtmosphereGenerator.CreateWallTorch(new Vector2(RoomWidth - 240.0f, 26.0f), torchFlame);
+        _atmosphereContainer.AddChild(leftTorch);
+        _atmosphereContainer.AddChild(rightTorch);
+
+        // 4. Radial Darkness Vignette (Smooth ambient occlusion towards room borders)
         Texture2D vignetteTex = (RoomType == 2)
             ? AtmosphereGenerator.GetBossVignetteTexture()
             : AtmosphereGenerator.GetRadialVignetteTexture(0.72f);
@@ -508,6 +522,24 @@ public partial class Room : Node2D
     {
         IsCleared = true;
         UpdateDoorVisuals(locked: false);
+
+        // Visceral combat juice: camera shake + door unseal pop
+        CameraShaker.Shake(0.18f);
+
+        foreach (var door in _doors)
+        {
+            var visual = door.GetNodeOrNull<TextureRect>("Visual");
+            if (visual != null)
+            {
+                visual.PivotOffset = visual.Size / 2.0f;
+                var unsealTween = visual.CreateTween();
+                unsealTween.TweenProperty(visual, "scale", new Vector2(1.22f, 1.22f), 0.12)
+                    .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+                unsealTween.TweenProperty(visual, "scale", Vector2.One, 0.15)
+                    .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
+            }
+        }
+
         EmitSignal(SignalName.RoomCleared);
         GameManager.Instance?.OnRoomCleared();
     }
