@@ -286,6 +286,7 @@ public partial class RoomManager : Node2D
         // Create new room with assigned theme
         var room = new Room();
         room.Theme = _roomThemes.TryGetValue(gridPos, out var theme) ? theme : RoomThemeType.Dungeon;
+        room.RoomType = _grid[gridPos.X, gridPos.Y];
 
         // Determine which doors exist based on neighboring rooms
         room.HasTopDoor    = HasRoomAt(gridPos + Vector2I.Up);

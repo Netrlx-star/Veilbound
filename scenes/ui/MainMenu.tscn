@@ -12,16 +12,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.06, 0.05, 0.08, 1)
-
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="ParallaxRoot" type="Control" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,67 +21,261 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="Background" type="ColorRect" parent="ParallaxRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.03, 0.06, 1)
+
+[node name="VignetteOverlay" type="TextureRect" parent="ParallaxRoot"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+
+[node name="MainLayout" type="HBoxContainer" parent="ParallaxRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = 40.0
+offset_right = -60.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="HeroAltarSection" type="VBoxContainer" parent="ParallaxRoot/MainLayout"]
+custom_minimum_size = Vector2(440, 0)
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="AltarHeading" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.65, 0.8, 0.9)
+theme_override_font_sizes/font_size = 14
+text = "— HEROIC ALTAR —"
+horizontal_alignment = 1
+
+[node name="HeroStage" type="Control" parent="ParallaxRoot/MainLayout/HeroAltarSection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 200)
+layout_mode = 2
+
+[node name="PedestalSprite" type="TextureRect" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -54.0
+offset_right = 100.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 0
+stretch_mode = 5
+
+[node name="HeroSprite" type="TextureRect" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStage"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -64.0
+offset_top = -170.0
+offset_right = 64.0
+offset_bottom = -42.0
+grow_horizontal = 2
+grow_vertical = 0
+stretch_mode = 5
+
+[node name="HeroTitleLabel" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.75, 1, 1)
-theme_override_font_sizes/font_size = 72
+theme_override_colors/font_color = Color(1, 0.88, 0.45, 1)
+theme_override_font_sizes/font_size = 24
+text = "THE WANDERER"
+horizontal_alignment = 1
+
+[node name="HeroSubtitleLabel" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.6, 0.75, 1)
+theme_override_font_sizes/font_size = 13
+text = "Ranged Occult Mystic · Tear Sparks"
+horizontal_alignment = 1
+
+[node name="HeroStatsPanel" type="PanelContainer" parent="ParallaxRoot/MainLayout/HeroAltarSection"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StatsMargin" type="MarginContainer" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStatsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="StatsVBox" type="VBoxContainer" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStatsPanel/StatsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StatHpLabel" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStatsPanel/StatsMargin/StatsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "❤️ Vitality:   3 Hearts (6 HP)"
+
+[node name="StatDmgLabel" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStatsPanel/StatsMargin/StatsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "🗡️ Damage:     3.5 Base (Ranged Tears)"
+
+[node name="StatSpeedLabel" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStatsPanel/StatsMargin/StatsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "⚡ Agility:    200 Movement Speed"
+
+[node name="StatWeaponLabel" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStatsPanel/StatsMargin/StatsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 13
+text = "🔮 Weapon:     Occult Tears (Range: 420)"
+
+[node name="StatSpecialLabel" type="Label" parent="ParallaxRoot/MainLayout/HeroAltarSection/HeroStatsPanel/StatsMargin/StatsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.75, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "⭐ Special:    Piercing & Bouncing tears"
+
+[node name="CharacterSelectBtn" type="Button" parent="ParallaxRoot/MainLayout/HeroAltarSection"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 42)
+theme_override_font_sizes/font_size = 15
+text = "⟲ SWITCH TO BLADESMITH"
+
+[node name="MenuActionsSection" type="VBoxContainer" parent="ParallaxRoot/MainLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 28
+alignment = 1
+
+[node name="TitleBox" type="VBoxContainer" parent="ParallaxRoot/MainLayout/MenuActionsSection"]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="TitleRune" type="Label" parent="ParallaxRoot/MainLayout/MenuActionsSection/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.6, 0.85, 0.8)
+theme_override_font_sizes/font_size = 18
+text = "— ❖ —"
+horizontal_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="ParallaxRoot/MainLayout/MenuActionsSection/TitleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.84, 1, 1)
+theme_override_font_sizes/font_size = 64
 text = "VEILBOUND"
 horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="SubtitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="SubtitleLabel" type="Label" parent="ParallaxRoot/MainLayout/MenuActionsSection/TitleBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.5, 0.7, 1)
-theme_override_font_sizes/font_size = 18
-text = "A 2D Roguelite"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Spacer" type="Control" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 20)
-
-[node name="CharacterSelectBtn" type="Button" parent="CenterContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(260, 46)
+theme_override_colors/font_color = Color(0.65, 0.58, 0.75, 1)
 theme_override_font_sizes/font_size = 16
-text = "Class: 🏹 Wanderer (Ranged)"
+text = "A DESCENT THROUGH THE VEIL"
+horizontal_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="MenuButtonsContainer" type="VBoxContainer" parent="ParallaxRoot/MainLayout/MenuActionsSection"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 14
+
+[node name="ContinueButton" type="Button" parent="ParallaxRoot/MainLayout/MenuActionsSection/MenuButtonsContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-custom_minimum_size = Vector2(260, 48)
+custom_minimum_size = Vector2(340, 48)
 theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 18
-text = "▶ Continue Run"
+text = "▶ CONTINUE DESCENT"
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="PlayButton" type="Button" parent="ParallaxRoot/MainLayout/MenuActionsSection/MenuButtonsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(220, 50)
-theme_override_font_sizes/font_size = 22
-text = "New Run"
+custom_minimum_size = Vector2(340, 48)
+theme_override_font_sizes/font_size = 18
+text = "▸ ENTER THE VEIL"
 
-[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="SettingsButton" type="Button" parent="ParallaxRoot/MainLayout/MenuActionsSection/MenuButtonsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(220, 50)
-theme_override_font_sizes/font_size = 22
-text = "Settings"
+custom_minimum_size = Vector2(340, 48)
+theme_override_font_sizes/font_size = 18
+text = "▸ SANCTUARY CODEX"
 
-[node name="ExitButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="ExitButton" type="Button" parent="ParallaxRoot/MainLayout/MenuActionsSection/MenuButtonsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(220, 50)
-theme_override_font_sizes/font_size = 22
-text = "Exit"
+custom_minimum_size = Vector2(340, 48)
+theme_override_font_sizes/font_size = 18
+text = "▸ SURRENDER TO VOID"
+
+[node name="FooterBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = -36.0
+offset_right = -30.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="VersionLabel" type="Label" parent="FooterBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.45, 0.6, 0.8)
+theme_override_font_sizes/font_size = 12
+text = "Veilbound v1.2.0 · Roguelite"
+
+[node name="FooterSpacer" type="Control" parent="FooterBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DiplomaWatermark" type="Label" parent="FooterBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.55, 0.7, 0.85)
+theme_override_font_sizes/font_size = 12
+text = "PGEE \"Konstantin Fotinov\" · Applied Programming · Diploma Project 2026"
 
 [node name="SettingsMenu" parent="." instance=ExtResource("2_settings")]
 unique_name_in_owner = true

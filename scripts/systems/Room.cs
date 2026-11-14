@@ -37,6 +37,7 @@ public partial class Room : Node2D
 
     // ── Theme & Decor ──
     public RoomThemeType Theme { get; set; } = RoomThemeType.Dungeon;
+    public int RoomType { get; set; } = 1; // 1 = Normal, 2 = Boss, 3 = Treasure, 4 = Shop
 
     // ── Room state ──
     public bool IsCleared { get; private set; } = false;
@@ -59,6 +60,7 @@ public partial class Room : Node2D
     private Node2D _doorsContainer;
     private Node2D _decorContainer;
     private Node2D _enemiesContainer;
+    private Node2D _atmosphereContainer;
 
     // ── Signals ──
     [Signal] public delegate void RoomClearedEventHandler();
@@ -70,16 +72,19 @@ public partial class Room : Node2D
         _doorsContainer = new Node2D { Name = "Doors" };
         _decorContainer = new Node2D { Name = "Decorations" };
         _enemiesContainer = new Node2D { Name = "Enemies" };
+        _atmosphereContainer = new Node2D { Name = "Atmosphere" };
 
         AddChild(_wallsContainer);
         AddChild(_doorsContainer);
         AddChild(_decorContainer);
         AddChild(_enemiesContainer);
+        AddChild(_atmosphereContainer);
 
         BuildWalls();
         BuildDoors();
         BuildFloor();
         BuildDecorations();
+        BuildAtmosphere();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -171,6 +176,70 @@ public partial class Room : Node2D
             };
             _decorContainer.AddChild(decalRect);
         }
+    }
+
+    private void BuildAtmosphere()
+    {
+        // 1. Soft Wall Drop-Shadow (gives 2.5D raised wall overhang depth)
+        var topShadow = new TextureRect
+        {
+            Texture = AtmosphereGenerator.GetWallShadowTexture(0.70f),
+            Position = new Vector2(0, WallThickness),
+            Size = new Vector2(RoomWidth, 32.0f),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.Scale,
+            ZIndex = -1,
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
+        _atmosphereContainer.AddChild(topShadow);
+
+        // 2. Ambient Floating Dust / Spore / Ember Particles
+        if (RoomType == 2) // Boss Room: Rising crimson soul embers
+        {
+            var bossEmbers = AtmosphereGenerator.CreateEmberParticles(
+                new Vector2(RoomWidth / 2.0f, RoomHeight * 0.78f),
+                new Color(0.95f, 0.28f, 0.18f, 0.65f),
+                26
+            );
+            _atmosphereContainer.AddChild(bossEmbers);
+        }
+        else if (RoomType == 4) // Shop ("Veil Bazaar"): Warm golden coin sparkles
+        {
+            var shopEmbers = AtmosphereGenerator.CreateEmberParticles(
+                new Vector2(RoomWidth / 2.0f, RoomHeight * 0.72f),
+                new Color(1.0f, 0.85f, 0.30f, 0.50f),
+                18
+            );
+            _atmosphereContainer.AddChild(shopEmbers);
+        }
+
+        // Ambient airborne dust motes tailored per room biome
+        Color dustTint = Theme switch
+        {
+            RoomThemeType.DesertTomb => new Color(0.88f, 0.78f, 0.48f, 0.24f),
+            RoomThemeType.Spaceship => new Color(0.35f, 0.85f, 1.0f, 0.24f),
+            RoomThemeType.SweetDessert => new Color(0.95f, 0.65f, 0.85f, 0.28f),
+            _ => (RoomType == 2) ? new Color(0.85f, 0.25f, 0.25f, 0.28f) : new Color(0.65f, 0.75f, 0.90f, 0.22f)
+        };
+        var dustParticles = AtmosphereGenerator.CreateAmbientDustParticles(new Vector2(RoomWidth, RoomHeight), dustTint, 26);
+        _atmosphereContainer.AddChild(dustParticles);
+
+        // 3. Radial Darkness Vignette (Smooth ambient occlusion towards room borders)
+        Texture2D vignetteTex = (RoomType == 2)
+            ? AtmosphereGenerator.GetBossVignetteTexture()
+            : AtmosphereGenerator.GetRadialVignetteTexture(0.72f);
+
+        var vignette = new TextureRect
+        {
+            Texture = vignetteTex,
+            Position = Vector2.Zero,
+            Size = new Vector2(RoomWidth, RoomHeight),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.Scale,
+            ZIndex = 8,
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
+        _atmosphereContainer.AddChild(vignette);
     }
 
     private void BuildWalls()
