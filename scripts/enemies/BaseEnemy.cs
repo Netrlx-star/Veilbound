@@ -153,11 +153,18 @@ public partial class BaseEnemy : CharacterBody2D
     /// <summary>
     /// Called when this enemy takes damage (from projectiles, etc.)
     /// </summary>
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, bool spawnFct = true)
     {
         if (IsDead) return;
 
         CurrentHealth -= damage;
+
+        if (spawnFct)
+        {
+            bool isCrit = damage >= 6.0f;
+            Color numColor = isCrit ? new Color(1.0f, 0.85f, 0.2f) : new Color(1.0f, 0.95f, 0.9f);
+            UI.FloatingCombatText.Spawn(GetTree().CurrentScene, GlobalPosition, damage, numColor, isCrit);
+        }
 
         // Flash red
         if (Sprite != null)

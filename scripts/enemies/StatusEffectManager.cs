@@ -55,7 +55,8 @@ public partial class StatusEffectManager : Node
                 if (existing.Stacks >= 3)
                 {
                     // Bleed rupture burst!
-                    _enemy.TakeDamage(12.0f);
+                    _enemy.TakeDamage(12.0f, false);
+                    UI.FloatingCombatText.Spawn(GetTree().CurrentScene, _enemy.GlobalPosition, 12.0f, new Color(0.95f, 0.2f, 0.3f), true, "RUPTURE! 12");
                     Systems.CameraShaker.Shake(0.22f);
                     _activeEffects.Remove(type);
                     UpdateModulation();
@@ -105,10 +106,16 @@ public partial class StatusEffectManager : Node
             if (effect.TickTimer >= tickInterval)
             {
                 effect.TickTimer = 0.0f;
-                // Deal DoT damage
-                if (effect.Type == StatusEffectType.Poison || effect.Type == StatusEffectType.Burn)
+                // Deal DoT damage with themed floating text
+                if (effect.Type == StatusEffectType.Poison)
                 {
-                    _enemy.TakeDamage(effect.DamagePerTick);
+                    _enemy.TakeDamage(effect.DamagePerTick, false);
+                    UI.FloatingCombatText.Spawn(GetTree().CurrentScene, _enemy.GlobalPosition, effect.DamagePerTick, new Color(0.35f, 0.95f, 0.35f));
+                }
+                else if (effect.Type == StatusEffectType.Burn)
+                {
+                    _enemy.TakeDamage(effect.DamagePerTick, false);
+                    UI.FloatingCombatText.Spawn(GetTree().CurrentScene, _enemy.GlobalPosition, effect.DamagePerTick, new Color(1.0f, 0.55f, 0.15f));
                 }
             }
 
