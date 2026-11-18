@@ -241,7 +241,7 @@ public partial class Room : Node2D
         // 4. Radial Darkness Vignette (Smooth ambient occlusion towards room borders)
         Texture2D vignetteTex = (RoomType == 2)
             ? AtmosphereGenerator.GetBossVignetteTexture()
-            : AtmosphereGenerator.GetRadialVignetteTexture(0.72f);
+            : AtmosphereGenerator.GetRoomVignetteTexture();
 
         var vignette = new TextureRect
         {

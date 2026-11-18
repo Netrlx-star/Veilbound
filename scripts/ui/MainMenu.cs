@@ -73,7 +73,7 @@ public partial class MainMenu : Control
         // 1. Setup Procedural Atmospheric Visuals
         if (_vignetteOverlay != null)
         {
-            _vignetteOverlay.Texture = Systems.AtmosphereGenerator.GetRadialVignetteTexture(0.82f);
+            _vignetteOverlay.Texture = Systems.AtmosphereGenerator.GetMenuVignetteTexture();
         }
 
         if (_pedestalSprite != null)

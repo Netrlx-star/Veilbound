@@ -10,25 +10,27 @@ namespace Veilbound.Systems;
 /// </summary>
 public static class AtmosphereGenerator
 {
-    private static Texture2D _vignetteTexture;
+    private static Texture2D _menuVignetteTexture;   // Main Menu only (deeper, 0.82)
+    private static Texture2D _roomVignetteTexture;   // Dungeon rooms (lighter, 0.72)
     private static Texture2D _bossVignetteTexture;
     private static Texture2D _wallShadowTexture;
     private static Texture2D _altarTexture;
     private static Texture2D _torchSconceTexture;
 
     /// <summary>
-    /// Smooth radial vignette gradient that darkens edges and focuses light on the center.
+    /// Deep radial vignette for the Main Menu atmosphere (0.82 darkness).
+    /// Intentionally separate from the room vignette to prevent shared-cache bleed.
     /// </summary>
-    public static Texture2D GetRadialVignetteTexture(float outerDarkness = 0.78f)
+    public static Texture2D GetMenuVignetteTexture()
     {
-        if (_vignetteTexture != null) return _vignetteTexture;
+        if (_menuVignetteTexture != null) return _menuVignetteTexture;
 
         var grad = new Gradient();
         grad.AddPoint(0.0f, new Color(0.0f, 0.0f, 0.0f, 0.0f));
-        grad.AddPoint(0.60f, new Color(0.02f, 0.01f, 0.04f, outerDarkness * 0.35f));
-        grad.AddPoint(1.0f, new Color(0.01f, 0.01f, 0.02f, outerDarkness));
+        grad.AddPoint(0.58f, new Color(0.02f, 0.01f, 0.05f, 0.82f * 0.40f));
+        grad.AddPoint(1.0f, new Color(0.01f, 0.01f, 0.02f, 0.82f));
 
-        var tex = new GradientTexture2D
+        _menuVignetteTexture = new GradientTexture2D
         {
             Gradient = grad,
             Fill = GradientTexture2D.FillEnum.Radial,
@@ -37,10 +39,39 @@ public static class AtmosphereGenerator
             Width = 640,
             Height = 360
         };
-
-        _vignetteTexture = tex;
-        return _vignetteTexture;
+        return _menuVignetteTexture;
     }
+
+    /// <summary>
+    /// Lighter radial vignette for dungeon rooms (0.72 darkness).
+    /// Intentionally separate from the menu vignette to prevent shared-cache bleed.
+    /// </summary>
+    public static Texture2D GetRoomVignetteTexture()
+    {
+        if (_roomVignetteTexture != null) return _roomVignetteTexture;
+
+        var grad = new Gradient();
+        grad.AddPoint(0.0f, new Color(0.0f, 0.0f, 0.0f, 0.0f));
+        grad.AddPoint(0.62f, new Color(0.02f, 0.01f, 0.04f, 0.72f * 0.30f));
+        grad.AddPoint(1.0f, new Color(0.01f, 0.01f, 0.02f, 0.72f));
+
+        _roomVignetteTexture = new GradientTexture2D
+        {
+            Gradient = grad,
+            Fill = GradientTexture2D.FillEnum.Radial,
+            FillFrom = new Vector2(0.5f, 0.5f),
+            FillTo = new Vector2(1.0f, 1.0f),
+            Width = 640,
+            Height = 360
+        };
+        return _roomVignetteTexture;
+    }
+
+    /// <summary>
+    /// Legacy alias kept for any external callers — routes to the room vignette.
+    /// </summary>
+    public static Texture2D GetRadialVignetteTexture(float outerDarkness = 0.72f)
+        => GetRoomVignetteTexture();
 
     /// <summary>
     /// Ominous deep crimson radial vignette for Boss rooms.

@@ -20,7 +20,19 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.04, 0.03, 0.06, 0.8)
+color = Color(0.03, 0.02, 0.05, 0.86)
+
+[node name="VignetteOverlay" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -30,59 +42,70 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(340, 400)
+[node name="PausePanel" type="VBoxContainer" parent="CenterContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
+theme_override_constants/separation = 16
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+[node name="HeaderBox" type="VBoxContainer" parent="CenterContainer/PausePanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 30
-theme_override_constants/margin_top = 25
-theme_override_constants/margin_right = 30
-theme_override_constants/margin_bottom = 25
+theme_override_constants/separation = 4
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+[node name="RuneAccent" type="Label" parent="CenterContainer/PausePanel/HeaderBox"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_colors/font_color = Color(0.6, 0.55, 0.75, 0.75)
+theme_override_font_sizes/font_size = 16
+text = "— ✦ —"
+horizontal_alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CenterContainer/PausePanel/HeaderBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.90, 0.82, 1.0, 1)
+theme_override_font_sizes/font_size = 48
 text = "PAUSED"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="SubtitleLabel" type="Label" parent="CenterContainer/PausePanel/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.60, 0.55, 0.72, 0.9)
+theme_override_font_sizes/font_size = 14
+text = "The Veil Holds..."
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="CenterContainer/PausePanel"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 10)
 
-[node name="ResumeButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="ResumeButton" type="Button" parent="CenterContainer/PausePanel"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(360, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Resume"
+text = "▸ RETURN TO THE VEIL"
 
-[node name="SettingsButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="SettingsButton" type="Button" parent="CenterContainer/PausePanel"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(360, 46)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Settings & Controls"
+theme_override_font_sizes/font_size = 17
+text = "▸ SANCTUARY CODEX"
 
-[node name="RestartButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="RestartButton" type="Button" parent="CenterContainer/PausePanel"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(360, 46)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Restart Run"
+theme_override_colors/font_color = Color(0.90, 0.60, 0.40, 1)
+theme_override_font_sizes/font_size = 17
+text = "▸ ABANDON & RESTART"
 
-[node name="MenuButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="MenuButton" type="Button" parent="CenterContainer/PausePanel"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(360, 46)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Quit to Menu"
+theme_override_colors/font_color = Color(0.75, 0.42, 0.42, 1)
+theme_override_font_sizes/font_size = 17
+text = "▸ SURRENDER TO VOID"
 
 [node name="SettingsMenu" parent="." instance=ExtResource("2_settings")]
 unique_name_in_owner = true
