@@ -17,6 +17,7 @@ public partial class ItemPedestal : Node2D
     private Label _nameLabel;
     private Label _priceLabel;
     private float _floatTimer = 0.0f;
+    private float _flashCooldown = 0.0f;
     private bool _collected = false;
 
     public override void _Ready()
@@ -73,82 +74,112 @@ public partial class ItemPedestal : Node2D
         _itemSprite.Position = new Vector2(0, -28.0f + Mathf.Sin(_floatTimer) * 4.0f);
     }
 
+    public override void _PhysicsProcess(double delta)
+    {
+        if (_flashCooldown > 0.0f)
+        {
+            _flashCooldown -= (float)delta;
+        }
+
+        if (_collected || _pickupArea == null) return;
+
+        var bodies = _pickupArea.GetOverlappingBodies();
+        foreach (var body in bodies)
+        {
+            if (body is Player.PlayerController player)
+            {
+                if (TryCollect(player))
+                {
+                    break;
+                }
+            }
+        }
+    }
+
     private void OnBodyEntered(Node2D body)
     {
-        if (_collected) return;
-
         if (body is Player.PlayerController player)
         {
-            if (Price > 0)
-            {
-                if (player.Stats.Coins < Price)
-                {
-                    if (_priceLabel != null)
-                    {
-                        var flashTween = CreateTween();
-                        flashTween.TweenProperty(_priceLabel, "modulate", new Color(1, 0.2f, 0.2f), 0.1);
-                        flashTween.TweenProperty(_priceLabel, "modulate", Colors.White, 0.15);
-                    }
-                    return;
-                }
+            TryCollect(player);
+        }
+    }
 
-                player.Stats.Coins -= Price;
-                if (_priceLabel != null)
+    public bool TryCollect(Player.PlayerController player)
+    {
+        if (_collected) return false;
+
+        if (Price > 0)
+        {
+            if (player.Stats.Coins < Price)
+            {
+                if (_priceLabel != null && _flashCooldown <= 0.0f)
                 {
-                    _priceLabel.Visible = false;
+                    _flashCooldown = 0.35f;
+                    var flashTween = CreateTween();
+                    flashTween.TweenProperty(_priceLabel, "modulate", new Color(1, 0.2f, 0.2f), 0.1);
+                    flashTween.TweenProperty(_priceLabel, "modulate", Colors.White, 0.15);
                 }
+                return false;
             }
 
-            _collected = true;
-
-            if (ActiveItem != null)
+            player.Stats.Coins -= Price;
+            if (_priceLabel != null)
             {
-                // Equip active item
-                player.SetActiveItem(ActiveItem);
-                UI.HUD.Instance?.ShowItemBanner(ActiveItem.Name, ActiveItem.Description, ActiveItem.ItemColor);
+                _priceLabel.Visible = false;
             }
-            else if (Item != null)
+        }
+
+        _collected = true;
+
+        if (ActiveItem != null)
+        {
+            // Equip active item
+            player.SetActiveItem(ActiveItem);
+            UI.HUD.Instance?.ShowItemBanner(ActiveItem.Name, ActiveItem.Description, ActiveItem.ItemColor);
+        }
+        else if (Item != null)
+        {
+            // Apply passive item bonuses to player
+            player.Stats.Damage += Item.DamageBonus;
+            player.Stats.FireRate = Mathf.Max(0.12f, player.Stats.FireRate - Item.FireRateReduction);
+            player.Stats.MoveSpeed += Item.SpeedBonus;
+            player.Stats.ProjectileRange += Item.RangeBonus;
+            player.Stats.Multishot += Item.MultishotBonus;
+
+            if (Item.GrantsPiercing) player.Stats.HasPiercing = true;
+            if (Item.GrantsBouncing) player.Stats.HasBouncing = true;
+            if (Item.InflictsStatus != Enemies.StatusEffectType.None) player.Stats.InflictedStatus = Item.InflictsStatus;
+
+            if (Item.MaxHealthBonus > 0)
             {
-                // Apply passive item bonuses to player
-                player.Stats.Damage += Item.DamageBonus;
-                player.Stats.FireRate = Mathf.Max(0.12f, player.Stats.FireRate - Item.FireRateReduction);
-                player.Stats.MoveSpeed += Item.SpeedBonus;
-                player.Stats.ProjectileRange += Item.RangeBonus;
-                player.Stats.Multishot += Item.MultishotBonus;
-
-                if (Item.GrantsPiercing) player.Stats.HasPiercing = true;
-                if (Item.GrantsBouncing) player.Stats.HasBouncing = true;
-                if (Item.InflictsStatus != Enemies.StatusEffectType.None) player.Stats.InflictedStatus = Item.InflictsStatus;
-
-                if (Item.MaxHealthBonus > 0)
-                {
-                    player.Stats.MaxHealth += Item.MaxHealthBonus;
-                    player.Heal(Item.MaxHealthBonus);
-                }
-
-                UI.HUD.Instance?.ShowItemBanner(Item.Name, Item.Description, Item.ItemColor);
-                UI.HUD.Instance?.AddPassiveRelic(Item.Name, Item.ItemColor);
+                player.Stats.MaxHealth += Item.MaxHealthBonus;
+                player.Heal(Item.MaxHealthBonus);
             }
+
+            UI.HUD.Instance?.ShowItemBanner(Item.Name, Item.Description, Item.ItemColor);
+            UI.HUD.Instance?.AddPassiveRelic(Item.Name, Item.ItemColor);
+        }
 
             player.Stats.ItemsCollected++;
             player.NotifyStatsChanged();
 
-            // Show floating label
-            _nameLabel.Visible = true;
-            _nameLabel.Position = new Vector2(-75, -70);
+        // Show floating label
+        _nameLabel.Visible = true;
+        _nameLabel.Position = new Vector2(-75, -70);
 
-            // Item pickup animation (float up and fade out)
-            var tween = CreateTween();
-            tween.SetParallel(true);
-            tween.TweenProperty(_itemSprite, "position:y", _itemSprite.Position.Y - 30.0f, 0.8);
-            tween.TweenProperty(_itemSprite, "modulate:a", 0.0f, 0.8);
-            tween.TweenProperty(_nameLabel, "position:y", _nameLabel.Position.Y - 20.0f, 1.2);
-            tween.TweenProperty(_nameLabel, "modulate:a", 0.0f, 1.2);
-            tween.Chain().TweenCallback(Callable.From(() =>
-            {
-                _itemSprite.Visible = false;
-                _nameLabel.Visible = false;
-            }));
-        }
+        // Item pickup animation (float up and fade out)
+        var tween = CreateTween();
+        tween.SetParallel(true);
+        tween.TweenProperty(_itemSprite, "position:y", _itemSprite.Position.Y - 30.0f, 0.8);
+        tween.TweenProperty(_itemSprite, "modulate:a", 0.0f, 0.8);
+        tween.TweenProperty(_nameLabel, "position:y", _nameLabel.Position.Y - 20.0f, 1.2);
+        tween.TweenProperty(_nameLabel, "modulate:a", 0.0f, 1.2);
+        tween.Chain().TweenCallback(Callable.From(() =>
+        {
+            _itemSprite.Visible = false;
+            _nameLabel.Visible = false;
+        }));
+
+        return true;
     }
 }

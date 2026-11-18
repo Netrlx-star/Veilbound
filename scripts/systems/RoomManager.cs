@@ -374,18 +374,18 @@ public partial class RoomManager : Node2D
 
         // 1. Red Heart (3 coins)
         var heart = new Items.ConsumablePickup();
-        room.AddChild(heart);
         heart.Initialize(new Vector2(centerX - 180, centerY), Items.ConsumableType.Heart, price: 3, value: 1);
+        room.AddChild(heart);
 
         // 2. Bomb Pickup (5 coins)
         var bomb = new Items.ConsumablePickup();
-        room.AddChild(bomb);
         bomb.Initialize(new Vector2(centerX - 60, centerY), Items.ConsumableType.Bomb, price: 5, value: 1);
+        room.AddChild(bomb);
 
         // 3. Key Pickup (5 coins)
         var key = new Items.ConsumablePickup();
-        room.AddChild(key);
         key.Initialize(new Vector2(centerX + 60, centerY), Items.ConsumableType.Key, price: 5, value: 1);
+        room.AddChild(key);
 
         // 4. Shop Item Pedestal (15 coins)
         var pedestalScene = GD.Load<PackedScene>("res://scenes/items/ItemPedestal.tscn");
