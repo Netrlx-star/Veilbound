@@ -23,6 +23,33 @@ public class ItemData
     public bool GrantsBouncing { get; set; } = false;
     public Enemies.StatusEffectType InflictsStatus { get; set; } = Enemies.StatusEffectType.None;
 
+    public string GetStatSummary()
+    {
+        var stats = new List<string>();
+        if (DamageBonus > 0) stats.Add($"+{DamageBonus:0.#} Damage");
+        if (FireRateReduction > 0) stats.Add("+Attack Speed (Tears Up)");
+        if (SpeedBonus > 0) stats.Add($"+{SpeedBonus:0} Speed");
+        if (MaxHealthBonus > 0) stats.Add($"+{MaxHealthBonus / 2} Max Heart");
+        if (RangeBonus > 0) stats.Add($"+{RangeBonus:0} Range");
+        if (MultishotBonus > 0) stats.Add($"+{MultishotBonus} Extra Tear");
+        if (GrantsPiercing) stats.Add("Piercing Tears");
+        if (GrantsBouncing) stats.Add("Bouncing Tears");
+        if (InflictsStatus != Enemies.StatusEffectType.None)
+        {
+            string statusName = InflictsStatus switch
+            {
+                Enemies.StatusEffectType.Poison => "Poison (Damage Over Time)",
+                Enemies.StatusEffectType.Burn => "Burn (Rapid Fire Damage)",
+                Enemies.StatusEffectType.Slow => "Frost (Slows Enemies)",
+                Enemies.StatusEffectType.Bleed => "Bleed (Rupture Damage)",
+                _ => InflictsStatus.ToString()
+            };
+            stats.Add($"Inflicts {statusName}");
+        }
+
+        return string.Join(" · ", stats);
+    }
+
     /// <summary>
     /// Pool of items available in treasure rooms.
     /// </summary>

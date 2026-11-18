@@ -46,6 +46,12 @@ public partial class HUD : CanvasLayer
     // ── Passive Relics Tray (Extra HUD) ──
     private HFlowContainer _relicsTray;
     private readonly HashSet<string> _collectedRelics = new();
+    private PanelContainer _relicTooltipCard;
+    private Label _relicTooltipTitle;
+    private Label _relicTooltipDesc;
+    private Label _relicTooltipStats;
+    private string _currentActiveItemName = "None";
+    private string _currentActiveItemDesc = "";
 
     // ── Retractable Stats & Guide Drawer ──
     private Control _statsDrawer;
@@ -157,6 +163,19 @@ public partial class HUD : CanvasLayer
 
         // 5. Relics Tray (Extra HUD)
         _relicsTray = GetNodeOrNull<HFlowContainer>("%RelicsTray");
+        SetupRelicTooltipCard();
+
+        if (_activeItemContainer != null)
+        {
+            _activeItemContainer.MouseEntered += () =>
+            {
+                if (_currentActiveItemName != "None")
+                {
+                    ShowRelicTooltip(_currentActiveItemName, _currentActiveItemDesc, "[SPACEBAR] Active Item", new Color(0.35f, 0.85f, 1.0f), _activeItemContainer);
+                }
+            };
+            _activeItemContainer.MouseExited += HideRelicTooltip;
+        }
 
         // 6. Stats & Controls Drawer
         _statsDrawer = GetNodeOrNull<Control>("%StatsDrawer");
@@ -276,6 +295,17 @@ public partial class HUD : CanvasLayer
     {
         if (_activeItemNameLabel == null || _chargePipsContainer == null) return;
 
+        _currentActiveItemName = name;
+        var activeData = Items.ActiveItemData.ActiveItemCatalog.Find(a => a.Name == name);
+        _currentActiveItemDesc = activeData != null ? activeData.Description : "";
+
+        if (_activeItemContainer != null)
+        {
+            _activeItemContainer.TooltipText = name != "None"
+                ? $"{name}\n{_currentActiveItemDesc}\n[SPACEBAR] {currentCharges}/{maxCharges} Charges"
+                : "No Active Item equipped";
+        }
+
         bool isPrimed = maxCharges > 0 && currentCharges >= maxCharges;
         _activeItemNameLabel.Text = isPrimed ? $"[SPACE] {name} (PRIMED!)" : $"[SPACE] {name}";
 
@@ -341,8 +371,8 @@ public partial class HUD : CanvasLayer
             .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
         _bannerTween.Parallel().TweenProperty(_itemBanner, "modulate:a", 1.0f, 0.20);
 
-        // 2. Hang proudly in view
-        _bannerTween.TweenInterval(2.2);
+        // 2. Hang proudly in view for 5 full seconds (requested: ~5 sec)
+        _bannerTween.TweenInterval(5.0);
 
         // 3. Slide up and fade out smoothly
         _bannerTween.Parallel().TweenProperty(_itemBanner, "position:y", 40.0f, 0.35)
@@ -354,23 +384,144 @@ public partial class HUD : CanvasLayer
     }
 
     // ══════════════════════════════════════════════
-    //  PASSIVE RELICS TRAY (EXTRA HUD)
+    //  PASSIVE RELICS TRAY (EXTRA HUD) & HOVER TOOLTIPS
     // ══════════════════════════════════════════════
 
-    public void AddPassiveRelic(string name, Color color)
+    private void SetupRelicTooltipCard()
+    {
+        _relicTooltipCard = new PanelContainer
+        {
+            Name = "RelicTooltipCard",
+            Visible = false,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ZIndex = 50
+        };
+
+        var cardStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0.08f, 0.06f, 0.12f, 0.96f),
+            BorderColor = new Color(0.85f, 0.70f, 0.25f, 0.90f),
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusTopLeft = 5,
+            CornerRadiusTopRight = 5,
+            CornerRadiusBottomLeft = 5,
+            CornerRadiusBottomRight = 5,
+            ShadowColor = new Color(0.0f, 0.0f, 0.0f, 0.60f),
+            ShadowSize = 6
+        };
+        _relicTooltipCard.AddThemeStyleboxOverride("panel", cardStyle);
+
+        var margin = new MarginContainer();
+        margin.AddThemeConstantOverride("margin_left", 10);
+        margin.AddThemeConstantOverride("margin_right", 10);
+        margin.AddThemeConstantOverride("margin_top", 8);
+        margin.AddThemeConstantOverride("margin_bottom", 8);
+        _relicTooltipCard.AddChild(margin);
+
+        var vbox = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 3);
+        margin.AddChild(vbox);
+
+        _relicTooltipTitle = new Label
+        {
+            Name = "Title",
+            HorizontalAlignment = HorizontalAlignment.Left
+        };
+        _relicTooltipTitle.AddThemeFontSizeOverride("font_size", 13);
+        _relicTooltipTitle.AddThemeColorOverride("font_color", new Color(1.0f, 0.88f, 0.35f));
+        vbox.AddChild(_relicTooltipTitle);
+
+        _relicTooltipDesc = new Label
+        {
+            Name = "Desc",
+            HorizontalAlignment = HorizontalAlignment.Left,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(180, 0)
+        };
+        _relicTooltipDesc.AddThemeFontSizeOverride("font_size", 11);
+        _relicTooltipDesc.AddThemeColorOverride("font_color", new Color(0.85f, 0.82f, 0.92f));
+        vbox.AddChild(_relicTooltipDesc);
+
+        _relicTooltipStats = new Label
+        {
+            Name = "Stats",
+            HorizontalAlignment = HorizontalAlignment.Left,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(180, 0)
+        };
+        _relicTooltipStats.AddThemeFontSizeOverride("font_size", 10);
+        _relicTooltipStats.AddThemeColorOverride("font_color", new Color(0.45f, 0.85f, 0.55f));
+        vbox.AddChild(_relicTooltipStats);
+
+        AddChild(_relicTooltipCard);
+    }
+
+    public void ShowRelicTooltip(string title, string desc, string stats, Color accentColor, Control sourceNode)
+    {
+        if (_relicTooltipCard == null) return;
+
+        _relicTooltipTitle.Text = title.ToUpper();
+        _relicTooltipTitle.AddThemeColorOverride("font_color", accentColor);
+
+        _relicTooltipDesc.Text = desc;
+        _relicTooltipStats.Text = stats;
+        _relicTooltipStats.Visible = !string.IsNullOrEmpty(stats);
+
+        var style = _relicTooltipCard.GetThemeStylebox("panel") as StyleBoxFlat;
+        if (style != null)
+        {
+            style.BorderColor = accentColor;
+        }
+
+        _relicTooltipCard.ResetSize();
+
+        // Position card: right under the badge below the minimap
+        Vector2 sourcePos = sourceNode.GlobalPosition;
+        float cardWidth = 210.0f;
+        float posX = sourcePos.X - cardWidth + sourceNode.Size.X;
+        float posY = sourcePos.Y + sourceNode.Size.Y + 6.0f;
+
+        // Clamp to screen bounds
+        posX = Mathf.Clamp(posX, 10.0f, 1280.0f - cardWidth - 10.0f);
+        posY = Mathf.Clamp(posY, 10.0f, 720.0f - 110.0f);
+
+        _relicTooltipCard.GlobalPosition = new Vector2(posX, posY);
+        _relicTooltipCard.Visible = true;
+        _relicTooltipCard.Modulate = new Color(1, 1, 1, 0);
+
+        var tween = CreateTween().SetPauseMode(Tween.TweenPauseMode.Process);
+        tween.TweenProperty(_relicTooltipCard, "modulate:a", 1.0f, 0.10);
+    }
+
+    public void HideRelicTooltip()
+    {
+        if (_relicTooltipCard == null || !_relicTooltipCard.Visible) return;
+        _relicTooltipCard.Visible = false;
+    }
+
+    public void AddPassiveRelic(Items.ItemData item)
+    {
+        if (item == null) return;
+        AddPassiveRelic(item.Name, item.ItemColor, item.Description, item.GetStatSummary());
+    }
+
+    public void AddPassiveRelic(string name, Color color, string description = "", string statsText = "")
     {
         if (_relicsTray == null || _collectedRelics.Contains(name)) return;
         _collectedRelics.Add(name);
 
         var badge = new PanelContainer
         {
-            CustomMinimumSize = new Vector2(24, 24),
-            TooltipText = name
+            CustomMinimumSize = new Vector2(26, 26),
+            PivotOffset = new Vector2(13, 13)
         };
 
         var badgeStyle = new StyleBoxFlat
         {
-            BgColor = new Color(0.12f, 0.09f, 0.16f, 0.90f),
+            BgColor = new Color(0.12f, 0.09f, 0.16f, 0.92f),
             BorderColor = color,
             BorderWidthBottom = 1,
             BorderWidthTop = 1,
@@ -388,9 +539,31 @@ public partial class HUD : CanvasLayer
             Texture = Systems.PlaceholderSprite.CreateCircleTexture(7, color),
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
-            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            MouseFilter = Control.MouseFilterEnum.Ignore
         };
         badge.AddChild(iconRect);
+
+        // Native tooltip fallback
+        string fullTooltip = name;
+        if (!string.IsNullOrEmpty(description)) fullTooltip += $"\n{description}";
+        if (!string.IsNullOrEmpty(statsText)) fullTooltip += $"\n{statsText}";
+        badge.TooltipText = fullTooltip;
+
+        // Custom rich hover card on mouse hover
+        badge.MouseEntered += () =>
+        {
+            ShowRelicTooltip(name, description, statsText, color, badge);
+            var hoverTween = badge.CreateTween();
+            hoverTween.TweenProperty(badge, "scale", new Vector2(1.2f, 1.2f), 0.1)
+                .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+        };
+        badge.MouseExited += () =>
+        {
+            HideRelicTooltip();
+            var hoverTween = badge.CreateTween();
+            hoverTween.TweenProperty(badge, "scale", Vector2.One, 0.1);
+        };
 
         _relicsTray.AddChild(badge);
 
