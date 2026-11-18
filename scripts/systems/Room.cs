@@ -180,20 +180,8 @@ public partial class Room : Node2D
 
     private void BuildAtmosphere()
     {
-        // 1. Soft Wall Drop-Shadow (gives 2.5D raised wall overhang depth)
-        var topShadow = new TextureRect
-        {
-            Texture = AtmosphereGenerator.GetWallShadowTexture(0.70f),
-            Position = new Vector2(0, WallThickness),
-            Size = new Vector2(RoomWidth, 32.0f),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.Scale,
-            ZIndex = -1,
-            MouseFilter = Control.MouseFilterEnum.Ignore
-        };
-        _atmosphereContainer.AddChild(topShadow);
-
-        // 2. Ambient Floating Dust / Spore / Ember Particles
+        // 1. Ambient Floating Dust / Spore / Ember Particles
+        // (Vignette & corner lighting decor belong exclusively to Main Menu & Pause Menu, not in-run rooms)
         if (RoomType == 2) // Boss Room: Rising crimson soul embers
         {
             var bossEmbers = AtmosphereGenerator.CreateEmberParticles(
@@ -223,37 +211,6 @@ public partial class Room : Node2D
         };
         var dustParticles = AtmosphereGenerator.CreateAmbientDustParticles(new Vector2(RoomWidth, RoomHeight), dustTint, 26);
         _atmosphereContainer.AddChild(dustParticles);
-
-        // 3. Wall Mounted Sconces & Torches (Flickering dynamic illumination)
-        Color torchFlame = (RoomType == 2)
-            ? new Color(0.95f, 0.28f, 0.20f)  // Ominous boss crimson flame
-            : (RoomType == 4)
-                ? new Color(1.0f, 0.88f, 0.35f) // Warm golden bazaar candle
-                : (Theme == RoomThemeType.Spaceship)
-                    ? new Color(0.35f, 0.85f, 1.0f) // Cyan sci-fi plasma beacon
-                    : new Color(1.0f, 0.65f, 0.22f); // Authentic dungeon wood torch
-
-        var leftTorch = AtmosphereGenerator.CreateWallTorch(new Vector2(240.0f, 26.0f), torchFlame);
-        var rightTorch = AtmosphereGenerator.CreateWallTorch(new Vector2(RoomWidth - 240.0f, 26.0f), torchFlame);
-        _atmosphereContainer.AddChild(leftTorch);
-        _atmosphereContainer.AddChild(rightTorch);
-
-        // 4. Radial Darkness Vignette (Smooth ambient occlusion towards room borders)
-        Texture2D vignetteTex = (RoomType == 2)
-            ? AtmosphereGenerator.GetBossVignetteTexture()
-            : AtmosphereGenerator.GetRoomVignetteTexture();
-
-        var vignette = new TextureRect
-        {
-            Texture = vignetteTex,
-            Position = Vector2.Zero,
-            Size = new Vector2(RoomWidth, RoomHeight),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.Scale,
-            ZIndex = 8,
-            MouseFilter = Control.MouseFilterEnum.Ignore
-        };
-        _atmosphereContainer.AddChild(vignette);
     }
 
     private void BuildWalls()
