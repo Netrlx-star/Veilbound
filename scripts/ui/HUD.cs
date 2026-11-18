@@ -91,10 +91,15 @@ public partial class HUD : CanvasLayer
     private PauseMenu _pauseMenu;
     private GameOverScreen _gameOverScreen;
     private SettingsMenu _settingsMenu;
+    private TacticalMapOverlay _tacticalMapOverlay;
 
     public override void _Ready()
     {
         Instance = this;
+
+        // Instantiate Full-Screen Tactical Cartography Overlay ([TAB])
+        _tacticalMapOverlay = new TacticalMapOverlay();
+        AddChild(_tacticalMapOverlay);
 
         // 1. Style TopLeft Occult Crest
         _topLeftPanel = GetNodeOrNull<PanelContainer>("TopLeftPanel");
@@ -700,6 +705,9 @@ public partial class HUD : CanvasLayer
     public void UpdateMinimap(int[,] grid, HashSet<Vector2I> visited, Vector2I currentPos)
     {
         _minimap?.Refresh(grid, visited, currentPos);
+        int floor = Systems.GameManager.Instance?.CurrentFloor ?? 1;
+        var cleared = Systems.RoomManager.Instance?.ClearedRooms;
+        _tacticalMapOverlay?.UpdateData(grid, visited, currentPos, floor, cleared);
     }
 
     // ══════════════════════════════════════════════
@@ -810,7 +818,28 @@ public partial class HUD : CanvasLayer
         }
 
         if (_bombGuideLabel != null)
-            _bombGuideLabel.Text = $"Bomb: {sm.GetActionKeyName("place_bomb")}";
+            _bombGuideLabel.Text = $"Bomb: {sm.GetActionKeyName("place_bomb")} · Map: [TAB]";
+    }
+
+    public bool IsTacticalMapOpen => _tacticalMapOverlay != null && _tacticalMapOverlay.Visible;
+
+    public void ToggleTacticalMap()
+    {
+        if (_tacticalMapOverlay == null) return;
+        if (_tacticalMapOverlay.Visible)
+        {
+            _tacticalMapOverlay.Close();
+        }
+        else
+        {
+            if (_pauseMenu != null && _pauseMenu.Visible) return;
+            _tacticalMapOverlay.Open();
+        }
+    }
+
+    public void CloseTacticalMap()
+    {
+        _tacticalMapOverlay?.Close();
     }
 
     public void TogglePauseMenu()

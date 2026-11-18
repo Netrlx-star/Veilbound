@@ -150,9 +150,27 @@ public partial class Game : Node2D
 
     public override void _Input(InputEvent @event)
     {
-        // Escape toggles pause overlay
+        // Tab or M toggles the Full-Screen Tactical Cartography Overlay
+        if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo)
+        {
+            if (keyEvent.Keycode == Key.Tab || keyEvent.Keycode == Key.M)
+            {
+                _hud?.ToggleTacticalMap();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+        }
+
+        // Escape closes tactical map if open, or toggles pause menu
         if (@event.IsActionPressed("ui_cancel"))
         {
+            if (_hud != null && _hud.IsTacticalMapOpen)
+            {
+                _hud.CloseTacticalMap();
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+
             _hud?.TogglePauseMenu();
             GetViewport().SetInputAsHandled();
         }
