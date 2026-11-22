@@ -88,6 +88,10 @@ public partial class SwordSlashArc : Area2D
             // Melee sword naturally inflicts Bleed or inherited elemental status
             var status = InflictedStatus != Enemies.StatusEffectType.None ? InflictedStatus : Enemies.StatusEffectType.Bleed;
             enemy.StatusManager?.ApplyEffect(status, 4.0f, Damage * 0.35f);
+
+            // Bloodbound rally recovery
+            var player = GetTree().GetFirstNodeInGroup("player") as PlayerController;
+            player?.OnSuccessfulAttackHit();
         }
         else if (body is Environments.RoomObstacle obstacle)
         {

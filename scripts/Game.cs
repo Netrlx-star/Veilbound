@@ -49,6 +49,7 @@ public partial class Game : Node2D
         _player.StatsChanged += OnPlayerStatsChanged;
         _player.ConsumablesChanged += OnConsumablesChanged;
         _player.ActiveItemChanged += OnActiveItemChanged;
+        _player.RallyChanged += (rallyHp, timer) => _hud?.UpdateRally(rallyHp, timer);
         HookRoomManagerSignals();
 
         if (Systems.GameManager.Instance != null)

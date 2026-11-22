@@ -90,6 +90,10 @@ public partial class Projectile : Area2D
                 {
                     enemy.StatusManager?.ApplyEffect(InflictedStatus, 3.5f, Damage * 0.4f);
                 }
+
+                // Bloodbound rally recovery
+                var player = GetTree().GetFirstNodeInGroup("player") as PlayerController;
+                player?.OnSuccessfulAttackHit();
             }
             else if (body.HasMethod("TakeDamage"))
             {

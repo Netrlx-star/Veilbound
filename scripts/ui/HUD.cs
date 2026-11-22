@@ -17,6 +17,10 @@ public partial class HUD : CanvasLayer
     private PanelContainer _topLeftPanel;
     private HBoxContainer _heartsContainer;
     private Tween _heartbeatTween;
+    private int _lastCurrentHealth = 6;
+    private int _lastMaxHealth = 6;
+    private int _currentRallyHealth = 0;
+    private float _currentRallyTimer = 0.0f;
 
     // ── Consumables ──
     private Label _coinLabel;
@@ -28,6 +32,8 @@ public partial class HUD : CanvasLayer
     private int _prevCoins = -1;
     private int _prevBombs = -1;
     private int _prevKeys = -1;
+    private int _displayCoins = 0;
+    private Tween _coinTween;
 
     // ── Active Item Slot UI ──
     private PanelContainer _activeItemContainer;
@@ -583,8 +589,18 @@ public partial class HUD : CanvasLayer
     //  HEALTH SYSTEM
     // ══════════════════════════════════════════════
 
+    public void UpdateRally(int rallyHealth, float timer)
+    {
+        _currentRallyHealth = rallyHealth;
+        _currentRallyTimer = timer;
+        UpdateHearts(_lastCurrentHealth, _lastMaxHealth);
+    }
+
     public void UpdateHearts(int currentHealth, int maxHealth)
     {
+        _lastCurrentHealth = currentHealth;
+        _lastMaxHealth = maxHealth;
+
         foreach (var child in _heartsContainer.GetChildren())
         {
             child.QueueFree();
@@ -594,11 +610,19 @@ public partial class HUD : CanvasLayer
 
         for (int i = 0; i < totalContainers; i++)
         {
-            int heartValue = currentHealth - (i * 2);
-            int state = 0; // 0 = empty, 1 = half, 2 = full
+            int baseHp = i * 2;
+            bool leftRed = currentHealth >= baseHp + 1;
+            bool leftRally = !leftRed && (currentHealth + _currentRallyHealth >= baseHp + 1);
 
-            if (heartValue >= 2) state = 2;
-            else if (heartValue == 1) state = 1;
+            bool rightRed = currentHealth >= baseHp + 2;
+            bool rightRally = !rightRed && (currentHealth + _currentRallyHealth >= baseHp + 2);
+
+            int state = 0;
+            if (leftRed && rightRed) state = 2;
+            else if (leftRed && rightRally) state = 3;
+            else if (leftRed) state = 1;
+            else if (leftRally && rightRally) state = 4;
+            else if (leftRally) state = 5;
             else state = 0;
 
             var heartRect = new TextureRect
@@ -646,8 +670,26 @@ public partial class HUD : CanvasLayer
     {
         if (_coinLabel != null)
         {
-            _coinLabel.Text = coins.ToString("D2");
-            if (_prevCoins != -1 && coins > _prevCoins) AnimatePickupPop(_coinIcon, _coinLabel);
+            if (_prevCoins != -1 && coins != _prevCoins)
+            {
+                int startVal = _displayCoins;
+                int targetVal = coins;
+                _coinTween?.Kill();
+                _coinTween = CreateTween();
+                _coinTween.TweenMethod(Callable.From<int>((val) =>
+                {
+                    _displayCoins = val;
+                    if (_coinLabel != null) _coinLabel.Text = val.ToString("D2");
+                }), startVal, targetVal, 0.35)
+                .SetTrans(Tween.TransitionType.Expo).SetEase(Tween.EaseType.Out);
+
+                if (coins > _prevCoins) AnimatePickupPop(_coinIcon, _coinLabel);
+            }
+            else
+            {
+                _displayCoins = coins;
+                _coinLabel.Text = coins.ToString("D2");
+            }
             _prevCoins = coins;
         }
 

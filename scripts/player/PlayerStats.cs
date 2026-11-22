@@ -8,9 +8,11 @@ namespace Veilbound.Player;
 /// </summary>
 public class PlayerStats
 {
-    // ── Health ──
+    // ── Health & Bloodbound Rally ──
     public int MaxHealth { get; set; } = 6;       // In half-hearts (6 = 3 full hearts)
     public int CurrentHealth { get; set; } = 6;
+    public int RallyHealth { get; set; } = 0;     // Recoverable damage window (Dead Cells / Bloodborne)
+    public float RallyTimer { get; set; } = 0.0f;
 
     // ── Movement ──
     public float MoveSpeed { get; set; } = 200.0f;
@@ -52,6 +54,8 @@ public class PlayerStats
     {
         MaxHealth = 6;
         CurrentHealth = 6;
+        RallyHealth = 0;
+        RallyTimer = 0.0f;
         MoveSpeed = 200.0f;
         Damage = 3.5f;
         FireRate = 0.4f;

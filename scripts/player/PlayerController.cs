@@ -30,6 +30,7 @@ public partial class PlayerController : CharacterBody2D
 
     // ── Signals ──
     [Signal] public delegate void HealthChangedEventHandler(int currentHealth, int maxHealth);
+    [Signal] public delegate void RallyChangedEventHandler(int rallyHealth, float timer);
     [Signal] public delegate void StatsChangedEventHandler();
     [Signal] public delegate void ConsumablesChangedEventHandler(int coins, int bombs, int keys);
     [Signal] public delegate void ActiveItemChangedEventHandler(string name, int currentCharges, int maxCharges);
@@ -123,6 +124,7 @@ public partial class PlayerController : CharacterBody2D
         HandleBombPlacement();
         HandleActiveItem();
         HandleInvincibility(delta);
+        HandleRallyDecay(delta);
     }
 
     private void HandleBombPlacement()
@@ -440,11 +442,20 @@ public partial class PlayerController : CharacterBody2D
     {
         if (IsInvincible) return;
 
+        int lostHp = Mathf.Min(amount, Stats.CurrentHealth);
         bool died = Stats.TakeDamage(amount);
         _invincibilityTimer = InvincibilityDuration;
 
         // Visceral camera trauma on taking damage
         Systems.CameraShaker.Shake(0.45f);
+
+        // Bloodbound Rally window (recoverable lost health)
+        if (!died && lostHp > 0)
+        {
+            Stats.RallyHealth = Mathf.Min(Stats.MaxHealth - Stats.CurrentHealth, Stats.RallyHealth + lostHp);
+            Stats.RallyTimer = 2.5f;
+            EmitSignal(SignalName.RallyChanged, Stats.RallyHealth, Stats.RallyTimer);
+        }
 
         EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
 
@@ -457,6 +468,34 @@ public partial class PlayerController : CharacterBody2D
         if (died)
         {
             OnDeath();
+        }
+    }
+
+    public void OnSuccessfulAttackHit()
+    {
+        if (Stats.RallyHealth > 0)
+        {
+            Stats.RallyHealth = Mathf.Max(0, Stats.RallyHealth - 1);
+            Stats.CurrentHealth = Mathf.Min(Stats.MaxHealth, Stats.CurrentHealth + 1);
+            Stats.RallyTimer = 2.5f; // Refresh window
+            EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
+            EmitSignal(SignalName.RallyChanged, Stats.RallyHealth, Stats.RallyTimer);
+            UI.FloatingCombatText.Spawn(GetTree().CurrentScene, GlobalPosition, 0.5f, new Color(1.0f, 0.75f, 0.20f), false, "+RALLY");
+        }
+    }
+
+    private void HandleRallyDecay(double delta)
+    {
+        if (Stats.RallyHealth > 0)
+        {
+            Stats.RallyTimer -= (float)delta;
+            if (Stats.RallyTimer <= 0.0f)
+            {
+                Stats.RallyHealth = 0;
+                Stats.RallyTimer = 0.0f;
+                EmitSignal(SignalName.HealthChanged, Stats.CurrentHealth, Stats.MaxHealth);
+                EmitSignal(SignalName.RallyChanged, 0, 0.0f);
+            }
         }
     }
 

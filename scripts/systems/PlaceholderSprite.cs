@@ -93,6 +93,8 @@ public partial class PlaceholderSprite : Node
 
         var outlineColor = new Color(0.18f, 0.04f, 0.06f, 0.95f);
         var fillColor = new Color(0.92f, 0.15f, 0.22f, 1.0f);
+        var rallyColor = new Color(0.98f, 0.65f, 0.18f, 1.0f);
+        var rallyShine = new Color(1.0f, 0.88f, 0.45f, 1.0f);
         var emptyFill = new Color(0.2f, 0.1f, 0.12f, 0.4f);
         var shineColor = new Color(1.0f, 0.7f, 0.75f, 1.0f);
 
@@ -116,18 +118,44 @@ public partial class PlaceholderSprite : Node
                             continue;
 
                         bool isLeftHalf = x <= width / 2;
-                        bool shouldFill = state == 2 || (state == 1 && isLeftHalf);
 
-                        if (shouldFill)
+                        if (isLeftHalf)
                         {
-                            if (y == 2 && (x == 2 || x == 3))
-                                image.SetPixel(x, y, shineColor);
+                            // Left side
+                            if (state == 1 || state == 2 || state == 3)
+                            {
+                                if (y == 2 && (x == 2 || x == 3))
+                                    image.SetPixel(x, y, shineColor);
+                                else
+                                    image.SetPixel(x, y, fillColor);
+                            }
+                            else if (state == 4 || state == 5)
+                            {
+                                if (y == 2 && (x == 2 || x == 3))
+                                    image.SetPixel(x, y, rallyShine);
+                                else
+                                    image.SetPixel(x, y, rallyColor);
+                            }
                             else
-                                image.SetPixel(x, y, fillColor);
+                            {
+                                image.SetPixel(x, y, emptyFill);
+                            }
                         }
                         else
                         {
-                            image.SetPixel(x, y, emptyFill);
+                            // Right side
+                            if (state == 2)
+                            {
+                                image.SetPixel(x, y, fillColor);
+                            }
+                            else if (state == 3 || state == 4)
+                            {
+                                image.SetPixel(x, y, rallyColor);
+                            }
+                            else
+                            {
+                                image.SetPixel(x, y, emptyFill);
+                            }
                         }
                     }
                 }
