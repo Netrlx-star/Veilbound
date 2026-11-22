@@ -158,26 +158,65 @@ public partial class BaseEnemy : CharacterBody2D
         if (IsDead) return;
 
         CurrentHealth -= damage;
+        bool isCrit = damage >= 6.0f;
 
         if (spawnFct)
         {
-            bool isCrit = damage >= 6.0f;
             Color numColor = isCrit ? new Color(1.0f, 0.85f, 0.2f) : new Color(1.0f, 0.95f, 0.9f);
             UI.FloatingCombatText.Spawn(GetTree().CurrentScene, GlobalPosition, damage, numColor, isCrit);
         }
 
-        // Flash red
+        // 1. Kinetic Hitstop Freeze-Frame (2 frames normal, 4 frames crit)
+        Systems.HitstopManager.Freeze(this, isCrit ? 0.065f : 0.035f);
+
+        // 2. Camera Trauma Shake
+        Systems.CameraShaker.Shake(isCrit ? 0.26f : 0.12f);
+
+        // 3. Multi-frame White Specular Flash & Elastic Squash-and-Stretch
         if (Sprite != null)
         {
-            Sprite.Modulate = new Color(1, 0.3f, 0.3f);
-            var tween = CreateTween();
-            tween.TweenProperty(Sprite, "modulate", Colors.White, 0.15);
+            var flashTween = CreateTween();
+            flashTween.TweenProperty(Sprite, "modulate", new Color(2.5f, 2.5f, 2.5f, 1.0f), 0.03); // Instant bright white flash
+            flashTween.TweenProperty(Sprite, "modulate", new Color(1.0f, 0.25f, 0.25f, 1.0f), 0.08); // Blood red tint
+            flashTween.TweenProperty(Sprite, "modulate", Colors.White, 0.12);
+
+            var baseScale = Sprite.Scale;
+            var squashed = new Vector2(baseScale.X * 1.25f, baseScale.Y * 0.80f);
+            var stretchTween = CreateTween();
+            stretchTween.TweenProperty(Sprite, "scale", squashed, 0.03);
+            stretchTween.TweenProperty(Sprite, "scale", baseScale, 0.14)
+                .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
         }
+
+        // 4. Directional Impact Hit Sparks
+        SpawnHitSparks(GlobalPosition, isCrit);
 
         if (CurrentHealth <= 0)
         {
             Die();
         }
+    }
+
+    private void SpawnHitSparks(Vector2 pos, bool isCrit)
+    {
+        var sparks = new CpuParticles2D
+        {
+            GlobalPosition = pos,
+            Emitting = true,
+            OneShot = true,
+            Explosiveness = 0.95f,
+            Amount = isCrit ? 12 : 6,
+            Lifetime = 0.35,
+            Spread = 180.0f,
+            Gravity = new Vector2(0, 90),
+            InitialVelocityMin = 40.0f,
+            InitialVelocityMax = isCrit ? 110.0f : 75.0f,
+            ScaleAmountMin = 1.5f,
+            ScaleAmountMax = isCrit ? 3.0f : 2.2f,
+            Color = isCrit ? new Color(1.0f, 0.88f, 0.35f) : new Color(0.95f, 0.30f, 0.35f)
+        };
+        GetTree().CurrentScene?.AddChild(sparks);
+        sparks.GetTree()?.CreateTimer(0.5).Connect("timeout", Callable.From(sparks.QueueFree));
     }
 
     /// <summary>

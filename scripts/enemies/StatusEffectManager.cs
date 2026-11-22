@@ -30,6 +30,7 @@ public partial class StatusEffectManager : Node
     private readonly Dictionary<StatusEffectType, ActiveStatus> _activeEffects = new();
     private BaseEnemy _enemy;
     private Sprite2D _sprite;
+    private HBoxContainer _statusTray;
     private float _originalSpeed;
 
     public override void _Ready()
@@ -39,6 +40,16 @@ public partial class StatusEffectManager : Node
         if (_enemy != null)
         {
             _originalSpeed = _enemy.MoveSpeed;
+
+            _statusTray = new HBoxContainer
+            {
+                Alignment = BoxContainer.AlignmentMode.Center,
+                Position = new Vector2(-50, -30),
+                Size = new Vector2(100, 16),
+                ZIndex = 20
+            };
+            _statusTray.AddThemeConstantOverride("separation", 4);
+            _enemy.AddChild(_statusTray);
         }
     }
 
@@ -159,6 +170,55 @@ public partial class StatusEffectManager : Node
         else
         {
             _sprite.Modulate = Colors.White;
+        }
+
+        UpdateStatusBadges();
+    }
+
+    private void UpdateStatusBadges()
+    {
+        if (_statusTray == null) return;
+
+        // Clear existing badge labels
+        foreach (Node child in _statusTray.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        foreach (var kvp in _activeEffects)
+        {
+            var effect = kvp.Value;
+            var badge = new Label
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            badge.AddThemeFontSizeOverride("font_size", 9);
+            badge.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.95f));
+            badge.AddThemeConstantOverride("shadow_offset_x", 1);
+            badge.AddThemeConstantOverride("shadow_offset_y", 1);
+
+            switch (effect.Type)
+            {
+                case StatusEffectType.Poison:
+                    badge.Text = "💧Poison";
+                    badge.AddThemeColorOverride("font_color", new Color(0.35f, 0.95f, 0.40f));
+                    break;
+                case StatusEffectType.Burn:
+                    badge.Text = "🔥Burn";
+                    badge.AddThemeColorOverride("font_color", new Color(1.0f, 0.60f, 0.20f));
+                    break;
+                case StatusEffectType.Slow:
+                    badge.Text = "❄️Slow";
+                    badge.AddThemeColorOverride("font_color", new Color(0.40f, 0.85f, 1.0f));
+                    break;
+                case StatusEffectType.Bleed:
+                    badge.Text = $"🩸x{effect.Stacks}";
+                    badge.AddThemeColorOverride("font_color", new Color(0.95f, 0.25f, 0.35f));
+                    break;
+            }
+
+            _statusTray.AddChild(badge);
         }
     }
 }
