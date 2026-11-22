@@ -397,26 +397,79 @@ public partial class RoomManager : Node2D
             room.AddChild(pedestal);
         }
 
-        // Shopkeeper decorative carpet & NPC visual
-        var carpet = new ColorRect
+        // ── The Veil Bazaar Staging ──
+        // 1. Ornate velvet runner rug with golden runic fringes
+        var carpetBase = new ColorRect
         {
-            Color = new Color(0.45f, 0.15f, 0.20f, 0.75f),
-            Position = new Vector2(centerX - 240, centerY - 60),
-            Size = new Vector2(480, 120),
+            Color = new Color(0.10f, 0.07f, 0.14f, 0.95f),
+            Position = new Vector2(centerX - 250, centerY - 28),
+            Size = new Vector2(500, 92),
             ZIndex = -1
         };
-        room.AddChild(carpet);
+        room.AddChild(carpetBase);
 
-        // Shopkeeper sign label
+        var carpetVelvet = new ColorRect
+        {
+            Color = new Color(0.34f, 0.09f, 0.14f, 0.90f),
+            Position = new Vector2(centerX - 246, centerY - 24),
+            Size = new Vector2(492, 84),
+            ZIndex = -1
+        };
+        room.AddChild(carpetVelvet);
+
+        // Golden fringes and piping
+        var fringeLeft = new ColorRect
+        {
+            Color = new Color(0.85f, 0.70f, 0.25f, 0.9f),
+            Position = new Vector2(centerX - 246, centerY - 24),
+            Size = new Vector2(4, 84),
+            ZIndex = -1
+        };
+        room.AddChild(fringeLeft);
+
+        var fringeRight = new ColorRect
+        {
+            Color = new Color(0.85f, 0.70f, 0.25f, 0.9f),
+            Position = new Vector2(centerX + 242, centerY - 24),
+            Size = new Vector2(4, 84),
+            ZIndex = -1
+        };
+        room.AddChild(fringeRight);
+
+        // Circular floor shadow decals under each item slot
+        float[] itemPositionsX = { centerX - 180, centerX - 60, centerX + 60, centerX + 180 };
+        foreach (float posX in itemPositionsX)
+        {
+            var shadow = new Sprite2D
+            {
+                Texture = PlaceholderSprite.CreateCircleTexture(14, new Color(0, 0, 0, 0.40f)),
+                Position = new Vector2(posX, centerY + 8),
+                Scale = new Vector2(1.4f, 0.6f),
+                ZIndex = -1
+            };
+            room.AddChild(shadow);
+        }
+
+        // 2. The Veil Broker (Atmospheric Merchant)
+        var broker = new Rooms.VeilBrokerNPC
+        {
+            Position = new Vector2(centerX, centerY - 64)
+        };
+        room.AddChild(broker);
+
+        // 3. Shopkeeper banner title
         var sign = new Label
         {
-            Text = "— VEIL BAZAAR —\nKeys, Bombs & Curiosities",
+            Text = "— THE VEIL BAZAAR —\nKeys, Bombs & Curiosities",
             HorizontalAlignment = HorizontalAlignment.Center,
-            Position = new Vector2(centerX - 150, centerY - 110),
-            Size = new Vector2(300, 40)
+            Position = new Vector2(centerX - 150, centerY - 138),
+            Size = new Vector2(300, 36)
         };
-        sign.AddThemeColorOverride("font_color", new Color(1.0f, 0.90f, 0.40f));
-        sign.AddThemeFontSizeOverride("font_size", 16);
+        sign.AddThemeColorOverride("font_color", new Color(1.0f, 0.88f, 0.40f));
+        sign.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.9f));
+        sign.AddThemeConstantOverride("shadow_offset_x", 1);
+        sign.AddThemeConstantOverride("shadow_offset_y", 1);
+        sign.AddThemeFontSizeOverride("font_size", 14);
         room.AddChild(sign);
     }
 

@@ -45,6 +45,8 @@ public static class AssetGenerator
     public static Texture2D PotObstacleTexture { get; private set; }
     public static Texture2D DoorFrameTexture { get; private set; }
     public static Texture2D BombEntityTexture { get; private set; }
+    public static Texture2D BrokerTexture { get; private set; }
+    public static Texture2D BrazierTexture { get; private set; }
 
     public static void InitializeAssets()
     {
@@ -81,6 +83,8 @@ public static class AssetGenerator
         PotObstacleTexture = GenerateAndSave("res://assets/environments/pot.png", BuildPotTexture(32, 32));
         DoorFrameTexture = GenerateAndSave("res://assets/environments/door_frame.png", BuildDoorTexture(80, 80));
         BombEntityTexture = GenerateAndSave("res://assets/items/bomb.png", BuildBombTexture(24, 24));
+        BrokerTexture = GenerateAndSave("res://assets/characters/broker.png", BuildBrokerSprite(40, 48));
+        BrazierTexture = GenerateAndSave("res://assets/environments/brazier.png", BuildBrazierSprite(20, 20));
 
         GD.Print("Veilbound pixel assets successfully generated and cached!");
     }
@@ -1242,6 +1246,154 @@ public static class AssetGenerator
         img.SetPixel(24, 25, bloodDark);
         img.SetPixel(7, 24, bloodDark);
 
+        return img;
+    }
+
+    // ══════════════════════════════════════════════
+    //  21. THE VEIL BROKER (Occult Shop Merchant)
+    // ══════════════════════════════════════════════
+    private static Image BuildBrokerSprite(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+
+        var darkRobes = new Color(0.12f, 0.09f, 0.18f);
+        var robeMid = new Color(0.22f, 0.16f, 0.32f);
+        var robeHighlight = new Color(0.34f, 0.26f, 0.48f);
+        var hoodShadow = new Color(0.06f, 0.04f, 0.09f);
+        var goldTrim = new Color(0.85f, 0.70f, 0.25f);
+        var eyeGlow = new Color(1.0f, 0.88f, 0.35f);
+        var eyeShine = new Color(1.0f, 0.98f, 0.75f);
+        var talismanColor = new Color(0.65f, 0.50f, 0.30f);
+
+        // Lower body / seated robes (Y: 22 to 44)
+        for (int y = 22; y <= 44; y++)
+        {
+            float progress = (y - 22.0f) / 22.0f;
+            int halfWidth = (int)Mathf.Lerp(10.0f, 17.0f, progress);
+            int startX = (w / 2) - halfWidth;
+            int endX = (w / 2) + halfWidth;
+
+            for (int x = startX; x <= endX; x++)
+            {
+                // Robe drape shading
+                float distFromCenter = Mathf.Abs(x - (w / 2.0f));
+                Color col = (distFromCenter < 5.0f && y % 3 == 0) ? robeHighlight : ((distFromCenter > halfWidth - 3) ? darkRobes : robeMid);
+                img.SetPixel(x, y, col);
+            }
+        }
+
+        // Gold trim on bottom robe hem
+        for (int x = (w / 2) - 16; x <= (w / 2) + 16; x++)
+        {
+            if (x >= 0 && x < w) img.SetPixel(x, 43, goldTrim);
+        }
+
+        // Hood / Shoulders (Y: 6 to 24)
+        for (int y = 6; y <= 24; y++)
+        {
+            float radius = (y < 14) ? Mathf.Sqrt(Mathf.Max(0, 49 - (y - 13) * (y - 13))) + 4 : 11.5f;
+            int startX = (int)((w / 2.0f) - radius);
+            int endX = (int)((w / 2.0f) + radius);
+
+            for (int x = startX; x <= endX; x++)
+            {
+                float dx = (x - (w / 2.0f)) / radius;
+                Color col = (dx < -0.5f || dx > 0.6f) ? darkRobes : robeMid;
+                if (y < 10) col = robeHighlight;
+                img.SetPixel(x, y, col);
+            }
+        }
+
+        // Hood face void opening (deep black shadow)
+        for (int y = 11; y <= 21; y++)
+        {
+            int halfVoid = (y < 16) ? (y - 10) + 3 : (21 - y) + 3;
+            for (int x = (w / 2) - halfVoid; x <= (w / 2) + halfVoid; x++)
+            {
+                img.SetPixel(x, y, hoodShadow);
+            }
+        }
+
+        // Gold embroidery rim along hood
+        for (int y = 9; y <= 22; y++)
+        {
+            int halfVoid = (y < 16) ? (y - 10) + 4 : (21 - y) + 4;
+            int leftRim = (w / 2) - halfVoid;
+            int rightRim = (w / 2) + halfVoid;
+            if (leftRim >= 0 && leftRim < w) img.SetPixel(leftRim, y, goldTrim);
+            if (rightRim >= 0 && rightRim < w) img.SetPixel(rightRim, y, goldTrim);
+        }
+
+        // Glowing slitted golden eyes
+        int eyeY = 15;
+        img.SetPixel((w / 2) - 4, eyeY, eyeGlow);
+        img.SetPixel((w / 2) - 3, eyeY, eyeShine);
+        img.SetPixel((w / 2) + 3, eyeY, eyeShine);
+        img.SetPixel((w / 2) + 4, eyeY, eyeGlow);
+
+        // Occult Talisman / Skull Bead in lap
+        for (int ty = 30; ty <= 34; ty++)
+        {
+            for (int tx = (w / 2) - 3; tx <= (w / 2) + 3; tx++)
+            {
+                img.SetPixel(tx, ty, talismanColor);
+            }
+        }
+        img.SetPixel((w / 2), 32, goldTrim);
+
+        AddDarkOutline(img, new Color(0.06f, 0.04f, 0.08f));
+        return img;
+    }
+
+    // ══════════════════════════════════════════════
+    //  22. INCENSE BRAZIER (Occult Shop Decor)
+    // ══════════════════════════════════════════════
+    private static Image BuildBrazierSprite(int w, int h)
+    {
+        var img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+        img.Fill(Colors.Transparent);
+
+        var ironDark = new Color(0.12f, 0.10f, 0.15f);
+        var ironMid = new Color(0.24f, 0.20f, 0.28f);
+        var ironLight = new Color(0.38f, 0.32f, 0.44f);
+        var emberCore = new Color(1.0f, 0.92f, 0.65f);
+        var emberViolet = new Color(0.72f, 0.25f, 0.95f);
+        var emberMagenta = new Color(0.95f, 0.22f, 0.50f);
+
+        // Tripod legs (Y: 12 to 18)
+        for (int y = 12; y <= 18; y++)
+        {
+            float prog = (y - 12.0f) / 6.0f;
+            int spread = (int)(prog * 5.0f);
+            img.SetPixel((w / 2) - spread, y, ironDark);
+            img.SetPixel((w / 2), y, ironMid);
+            img.SetPixel((w / 2) + spread, y, ironDark);
+        }
+
+        // Metal Bowl (Y: 6 to 12)
+        for (int y = 6; y <= 12; y++)
+        {
+            float radius = (y < 9) ? 6.5f : Mathf.Max(2.0f, 6.5f - (y - 8.5f));
+            for (int x = (int)((w / 2.0f) - radius); x <= (int)((w / 2.0f) + radius); x++)
+            {
+                Color col = (y == 6) ? ironLight : ((x == (int)((w / 2.0f) - radius) || x == (int)((w / 2.0f) + radius)) ? ironDark : ironMid);
+                img.SetPixel(x, y, col);
+            }
+        }
+
+        // Embers inside bowl (Y: 4 to 6)
+        for (int x = (w / 2) - 4; x <= (w / 2) + 4; x++)
+        {
+            img.SetPixel(x, 5, emberViolet);
+            if (Mathf.Abs(x - (w / 2)) <= 2)
+            {
+                img.SetPixel(x, 4, emberCore);
+                img.SetPixel(x, 5, emberMagenta);
+            }
+        }
+
+        AddDarkOutline(img, new Color(0.06f, 0.05f, 0.08f));
         return img;
     }
 

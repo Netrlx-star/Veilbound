@@ -16,6 +16,8 @@ public partial class ItemPedestal : Node2D
     private Sprite2D _itemSprite;
     private Label _nameLabel;
     private Label _priceLabel;
+    private PanelContainer _appraisalCard;
+    private Label _appraisalLabel;
     private float _floatTimer = 0.0f;
     private float _flashCooldown = 0.0f;
     private bool _collected = false;
@@ -60,9 +62,68 @@ public partial class ItemPedestal : Node2D
             _priceLabel.AddThemeColorOverride("font_color", new Color(1.0f, 0.85f, 0.2f));
             _priceLabel.AddThemeFontSizeOverride("font_size", 13);
             AddChild(_priceLabel);
+            SetupAppraisalCard();
         }
 
         _pickupArea.BodyEntered += OnBodyEntered;
+    }
+
+    private void SetupAppraisalCard()
+    {
+        if (Price <= 0 || _appraisalCard != null) return;
+
+        _appraisalCard = new PanelContainer
+        {
+            Position = new Vector2(-85, -80),
+            Size = new Vector2(170, 48),
+            Visible = false,
+            ZIndex = 30
+        };
+
+        var style = new StyleBoxFlat
+        {
+            BgColor = new Color(0.10f, 0.08f, 0.15f, 0.95f),
+            BorderColor = new Color(0.85f, 0.70f, 0.25f, 0.90f),
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4
+        };
+        _appraisalCard.AddThemeStyleboxOverride("panel", style);
+
+        _appraisalLabel = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart
+        };
+        _appraisalLabel.AddThemeColorOverride("font_color", new Color(1.0f, 0.95f, 0.85f));
+        _appraisalLabel.AddThemeFontSizeOverride("font_size", 10);
+        _appraisalCard.AddChild(_appraisalLabel);
+
+        AddChild(_appraisalCard);
+    }
+
+    private void UpdateAppraisalCard(bool show, bool canAfford)
+    {
+        if (_appraisalCard == null || _appraisalLabel == null) return;
+
+        if (!show)
+        {
+            _appraisalCard.Visible = false;
+            return;
+        }
+
+        string itemName = ActiveItem != null ? ActiveItem.Name : (Item != null ? Item.Name : "Relic");
+        string itemDesc = ActiveItem != null ? ActiveItem.Description : (Item != null ? Item.Description : "");
+        string prompt = canAfford ? $"[Walk In: {Price}¢]" : $"[Need More: {Price}¢]";
+
+        _appraisalLabel.Text = $"{itemName}\n{itemDesc}\n{prompt}";
+        _appraisalCard.Visible = true;
     }
 
     public override void _Process(double delta)
@@ -72,6 +133,27 @@ public partial class ItemPedestal : Node2D
         // Floating animation for the item
         _floatTimer += (float)delta * 3.0f;
         _itemSprite.Position = new Vector2(0, -28.0f + Mathf.Sin(_floatTimer) * 4.0f);
+
+        // Live shop affordability & appraisal proximity check
+        if (Price > 0)
+        {
+            var player = GetTree().GetFirstNodeInGroup("player") as Player.PlayerController;
+            if (player != null)
+            {
+                bool canAfford = player.Stats.Coins >= Price;
+                if (_priceLabel != null)
+                {
+                    _priceLabel.AddThemeColorOverride("font_color", canAfford ? new Color(1.0f, 0.88f, 0.35f) : new Color(0.92f, 0.35f, 0.35f));
+                }
+                if (_itemSprite != null)
+                {
+                    _itemSprite.Modulate = canAfford ? Colors.White : new Color(0.68f, 0.68f, 0.74f, 0.85f);
+                }
+
+                float dist = GlobalPosition.DistanceTo(player.GlobalPosition);
+                UpdateAppraisalCard(dist < 52.0f, canAfford);
+            }
+        }
     }
 
     public override void _PhysicsProcess(double delta)
@@ -127,6 +209,12 @@ public partial class ItemPedestal : Node2D
             {
                 _priceLabel.Visible = false;
             }
+            if (_appraisalCard != null)
+            {
+                _appraisalCard.Visible = false;
+            }
+            SpawnPurchaseParticles(GlobalPosition);
+            Rooms.VeilBrokerNPC.NotifyItemPurchased();
         }
 
         _collected = true;
@@ -184,5 +272,28 @@ public partial class ItemPedestal : Node2D
         }));
 
         return true;
+    }
+
+    private void SpawnPurchaseParticles(Vector2 pos)
+    {
+        var particles = new CpuParticles2D
+        {
+            GlobalPosition = pos,
+            Emitting = true,
+            OneShot = true,
+            Explosiveness = 0.95f,
+            Amount = 16,
+            Lifetime = 0.45,
+            Direction = new Vector2(0, -1),
+            Spread = 180.0f,
+            Gravity = new Vector2(0, 75),
+            InitialVelocityMin = 50.0f,
+            InitialVelocityMax = 95.0f,
+            ScaleAmountMin = 2.0f,
+            ScaleAmountMax = 3.5f,
+            Color = new Color(1.0f, 0.88f, 0.35f)
+        };
+        GetTree().CurrentScene?.AddChild(particles);
+        particles.GetTree()?.CreateTimer(0.6).Connect("timeout", Callable.From(particles.QueueFree));
     }
 }
