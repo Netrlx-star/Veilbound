@@ -33,22 +33,67 @@ public partial class FloatingCombatText : Node2D
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        string text = !string.IsNullOrEmpty(customText) 
-            ? customText 
-            : (isCritical ? $"{amount:F1}!" : $"{amount:F1}");
+        string text;
+        int fontSize;
+
+        if (!string.IsNullOrEmpty(customText))
+        {
+            if (customText.Contains("RALLY"))
+            {
+                text = "✨ +RALLY";
+                fontSize = 13;
+                color = new Color(1.0f, 0.78f, 0.25f);
+            }
+            else if (customText.Contains("RUPTURE"))
+            {
+                text = $"💥 {customText}";
+                fontSize = 15;
+                color = new Color(0.98f, 0.25f, 0.35f);
+            }
+            else
+            {
+                text = customText;
+                fontSize = isCritical ? 15 : 12;
+            }
+        }
+        else if (isCritical)
+        {
+            text = $"★ {amount:F1}!";
+            fontSize = 15;
+            color = new Color(1.0f, 0.88f, 0.25f);
+        }
+        else if (color.G > 0.8f && color.R < 0.5f) // Poison DoT
+        {
+            text = $"{amount:F1} 💧";
+            fontSize = 12;
+            color = new Color(0.35f, 0.95f, 0.35f);
+        }
+        else if (color.R > 0.85f && color.G > 0.4f && color.B < 0.3f) // Burn DoT
+        {
+            text = $"{amount:F1} 🔥";
+            fontSize = 12;
+            color = new Color(1.0f, 0.58f, 0.18f);
+        }
+        else
+        {
+            text = $"{amount:F1}";
+            fontSize = 12;
+        }
 
         _label.Text = text;
         _label.AddThemeColorOverride("font_color", color);
-        _label.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.9f));
+        _label.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.95f));
         _label.AddThemeConstantOverride("shadow_offset_x", 1);
         _label.AddThemeConstantOverride("shadow_offset_y", 1);
-        _label.AddThemeFontSizeOverride("font_size", isCritical ? 14 : 11);
+        _label.AddThemeColorOverride("font_outline_color", new Color(0.04f, 0.02f, 0.06f, 0.95f));
+        _label.AddThemeConstantOverride("outline_size", 2);
+        _label.AddThemeFontSizeOverride("font_size", fontSize);
 
         AddChild(_label);
 
         // Center label offset
-        _label.Position = new Vector2(-40, -12);
-        _label.Size = new Vector2(80, 24);
+        _label.Position = new Vector2(-50, -12);
+        _label.Size = new Vector2(100, 24);
 
         // Initial pop-scale tween
         Scale = Vector2.Zero;

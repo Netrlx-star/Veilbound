@@ -249,6 +249,7 @@ public partial class ItemPedestal : Node2D
             string bannerDesc = !string.IsNullOrEmpty(statSummary) ? $"{Item.Description}\n{statSummary}" : Item.Description;
             UI.HUD.Instance?.ShowItemBanner(Item.Name, bannerDesc, Item.ItemColor);
             UI.HUD.Instance?.AddPassiveRelic(Item);
+            player.Stats.CollectedItems.Add(Item);
         }
 
             player.Stats.ItemsCollected++;

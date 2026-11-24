@@ -20,7 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.03, 0.02, 0.05, 0.86)
+color = Color(0.03, 0.02, 0.05, 0.90)
 
 [node name="VignetteOverlay" type="TextureRect" parent="."]
 unique_name_in_owner = true
@@ -44,67 +44,250 @@ grow_vertical = 2
 
 [node name="PausePanel" type="VBoxContainer" parent="CenterContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(1080, 600)
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="HeaderBox" type="VBoxContainer" parent="CenterContainer/PausePanel"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
 
 [node name="RuneAccent" type="Label" parent="CenterContainer/PausePanel/HeaderBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.55, 0.75, 0.75)
-theme_override_font_sizes/font_size = 16
-text = "— ✦ —"
+theme_override_colors/font_color = Color(0.85, 0.72, 0.35, 0.9)
+theme_override_font_sizes/font_size = 14
+text = "— ✦ THE VEIL HOLDS ✦ —"
 horizontal_alignment = 1
 
 [node name="TitleLabel" type="Label" parent="CenterContainer/PausePanel/HeaderBox"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.90, 0.82, 1.0, 1)
-theme_override_font_sizes/font_size = 48
-text = "PAUSED"
+theme_override_colors/font_color = Color(0.95, 0.90, 1.0, 1)
+theme_override_font_sizes/font_size = 28
+text = "SANCTUARY CODEX & DESCENT PAUSE"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="CenterContainer/PausePanel/HeaderBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.60, 0.55, 0.72, 0.9)
-theme_override_font_sizes/font_size = 14
-text = "The Veil Holds..."
+theme_override_colors/font_color = Color(0.65, 0.60, 0.75, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "Time and shadows suspend in occult communion"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="CenterContainer/PausePanel"]
+[node name="ColumnsContainer" type="HBoxContainer" parent="CenterContainer/PausePanel"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 10)
+size_flags_vertical = 3
+theme_override_constants/separation = 16
 
-[node name="ResumeButton" type="Button" parent="CenterContainer/PausePanel"]
+[node name="LeftTelemetryPanel" type="PanelContainer" parent="CenterContainer/PausePanel/ColumnsContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 50)
+custom_minimum_size = Vector2(300, 500)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "▸ RETURN TO THE VEIL"
+size_flags_vertical = 3
 
-[node name="SettingsButton" type="Button" parent="CenterContainer/PausePanel"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 46)
+[node name="LeftMargin" type="MarginContainer" parent="CenterContainer/PausePanel/ColumnsContainer/LeftTelemetryPanel"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 17
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="TelemetryBox" type="VBoxContainer" parent="CenterContainer/PausePanel/ColumnsContainer/LeftTelemetryPanel/LeftMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CenterRosaryPanel" type="PanelContainer" parent="CenterContainer/PausePanel/ColumnsContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(480, 500)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CenterMargin" type="MarginContainer" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="RosaryBox" type="VBoxContainer" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RosaryHeaderLabel" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.40, 1)
+theme_override_font_sizes/font_size = 16
+text = "✦ SANCTUARY ROSARY ✦"
+horizontal_alignment = 1
+
+[node name="RosaryCountLabel" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.70, 0.65, 0.80, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Claimed Relics & Arcana (0)"
+horizontal_alignment = 1
+
+[node name="RosaryScroll" type="ScrollContainer" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RosaryGrid" type="HFlowContainer" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox/RosaryScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="RosaryEmptyLabel" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.50, 0.65, 0.8)
+theme_override_font_sizes/font_size = 13
+text = "No relics yet claimed from the shadows.
+Discover treasure crypts, defeat floor titans,
+and trade with the Bazaar peddler."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InspectionCard" type="PanelContainer" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+
+[node name="InspectionMargin" type="MarginContainer" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox/InspectionCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="InspectionBox" type="VBoxContainer" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox/InspectionCard/InspectionMargin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="InspectionTitle" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox/InspectionCard/InspectionMargin/InspectionBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.88, 0.42, 1)
+theme_override_font_sizes/font_size = 16
+text = "Select a Relic"
+
+[node name="InspectionType" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox/InspectionCard/InspectionMargin/InspectionBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.70, 0.60, 0.85, 0.85)
+theme_override_font_sizes/font_size = 11
+text = "✦ PASSIVE RELIC ✦"
+
+[node name="InspectionDesc" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox/InspectionCard/InspectionMargin/InspectionBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.82, 0.90, 0.95)
+theme_override_font_sizes/font_size = 13
+text = "Hover or select any relic in the rosary grid above to inspect its lore and dark boons."
+autowrap_mode = 2
+
+[node name="InspectionStats" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/CenterRosaryPanel/CenterMargin/RosaryBox/InspectionCard/InspectionMargin/InspectionBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.85, 0.95, 0.95)
+theme_override_font_sizes/font_size = 12
+text = ""
+
+[node name="RightActionsPanel" type="PanelContainer" parent="CenterContainer/PausePanel/ColumnsContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 500)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RightMargin" type="MarginContainer" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
+
+[node name="ActionsBox" type="VBoxContainer" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RunSummaryBox" type="VBoxContainer" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SummaryHeader" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox/RunSummaryBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.40, 1)
+theme_override_font_sizes/font_size = 15
+text = "✦ DESCENT RECORD ✦"
+horizontal_alignment = 1
+
+[node name="SummaryFloorLabel" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox/RunSummaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.80, 0.92, 1)
+theme_override_font_sizes/font_size = 13
+text = "Floor: 1 (The Crypt)"
+
+[node name="SummaryRoomsLabel" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox/RunSummaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.70, 0.85, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Chambers Purged: 0"
+
+[node name="SummaryKillsLabel" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox/RunSummaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.70, 0.85, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "Foes Banished: 0"
+
+[node name="SummaryTreasuryLabel" type="Label" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox/RunSummaryBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.80, 0.35, 1)
+theme_override_font_sizes/font_size = 13
+text = "🪙 0   💣 1   🗝 1"
+
+[node name="SummarySeparator" type="HSeparator" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ResumeButton" type="Button" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "▸ RETURN TO VEIL"
+
+[node name="SettingsButton" type="Button" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
 text = "▸ SANCTUARY CODEX"
 
-[node name="RestartButton" type="Button" parent="CenterContainer/PausePanel"]
+[node name="RestartButton" type="Button" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 46)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.90, 0.60, 0.40, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 15
 text = "▸ ABANDON & RESTART"
 
-[node name="MenuButton" type="Button" parent="CenterContainer/PausePanel"]
+[node name="MenuButton" type="Button" parent="CenterContainer/PausePanel/ColumnsContainer/RightActionsPanel/RightMargin/ActionsBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 46)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.42, 0.42, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 15
 text = "▸ SURRENDER TO VOID"
 
 [node name="SettingsMenu" parent="." instance=ExtResource("2_settings")]

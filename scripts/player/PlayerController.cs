@@ -8,6 +8,8 @@ namespace Veilbound.Player;
 /// </summary>
 public partial class PlayerController : CharacterBody2D
 {
+    public static PlayerController Instance { get; private set; }
+
     // ── Stats ──
     public PlayerStats Stats { get; private set; } = new();
 
@@ -38,6 +40,7 @@ public partial class PlayerController : CharacterBody2D
 
     public override void _Ready()
     {
+        Instance = this;
         _projectileScene = GD.Load<PackedScene>("res://scenes/player/Projectile.tscn");
 
         _sprite = GetNode<Sprite2D>("Sprite2D");
@@ -548,5 +551,11 @@ public partial class PlayerController : CharacterBody2D
         {
             EmitSignal(SignalName.PlayerDied);
         };
+    }
+
+    public override void _ExitTree()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 }
