@@ -295,18 +295,18 @@ visible = false
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -210.0
+offset_left = -260.0
 offset_top = 80.0
-offset_right = 210.0
-offset_bottom = 144.0
+offset_right = 260.0
+offset_bottom = 158.0
 grow_horizontal = 2
 
 [node name="BannerMargin" type="MarginContainer" parent="ItemBanner"]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
 
 [node name="BannerHBox" type="HBoxContainer" parent="ItemBanner/BannerMargin"]
 layout_mode = 2
@@ -314,30 +314,58 @@ theme_override_constants/separation = 12
 
 [node name="BannerIcon" type="TextureRect" parent="ItemBanner/BannerMargin/BannerHBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 32)
+custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
+size_flags_vertical = 4
 stretch_mode = 5
 
 [node name="BannerVBox" type="VBoxContainer" parent="ItemBanner/BannerMargin/BannerHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 2
+theme_override_constants/separation = 3
 
 [node name="BannerTitle" type="Label" parent="ItemBanner/BannerMargin/BannerHBox/BannerVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.25, 1)
+theme_override_colors/font_color = Color(1, 0.88, 0.35, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.95)
-theme_override_font_sizes/font_size = 14
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
 text = "ITEM TITLE"
 
 [node name="BannerSubtitle" type="Label" parent="ItemBanner/BannerMargin/BannerHBox/BannerVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.9, 1, 1)
+theme_override_colors/font_color = Color(0.9, 0.93, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.95)
-theme_override_font_sizes/font_size = 11
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
 text = "Item description flavor text"
+autowrap_mode = 2
+
+[node name="BannerDismissHint" type="Label" parent="ItemBanner/BannerMargin/BannerHBox/BannerVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.70, 0.65, 0.80, 0.8)
+theme_override_font_sizes/font_size = 10
+text = "✦ CLICK ANYWHERE TO DISMISS ✦"
+
+[node name="BannerCloseBtn" type="Button" parent="ItemBanner/BannerMargin/BannerHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 14
+text = "✕"
+flat = true
+
+[node name="BannerTransparentButton" type="Button" parent="ItemBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+mouse_default_cursor_shape = 2
 
 [node name="BossBarContainer" type="VBoxContainer" parent="."]
 unique_name_in_owner = true

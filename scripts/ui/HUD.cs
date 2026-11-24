@@ -47,6 +47,9 @@ public partial class HUD : CanvasLayer
     private TextureRect _bannerIcon;
     private Label _bannerTitle;
     private Label _bannerSubtitle;
+    private Label _bannerDismissHint;
+    private Button _bannerCloseBtn;
+    private Button _bannerTransparentBtn;
     private Tween _bannerTween;
 
     // ── Boss Intro Splash & Chamber Purged Banners ──
@@ -163,22 +166,23 @@ public partial class HUD : CanvasLayer
         _bannerIcon = GetNodeOrNull<TextureRect>("%BannerIcon");
         _bannerTitle = GetNodeOrNull<Label>("%BannerTitle");
         _bannerSubtitle = GetNodeOrNull<Label>("%BannerSubtitle");
+        _bannerDismissHint = GetNodeOrNull<Label>("%BannerDismissHint");
+        _bannerCloseBtn = GetNodeOrNull<Button>("%BannerCloseBtn");
+        _bannerTransparentBtn = GetNodeOrNull<Button>("%BannerTransparentButton");
+
+        if (_bannerCloseBtn != null)
+            _bannerCloseBtn.Pressed += DismissItemBanner;
+
+        if (_bannerTransparentBtn != null)
+        {
+            _bannerTransparentBtn.Pressed += DismissItemBanner;
+            _bannerTransparentBtn.MouseEntered += OnBannerHovered;
+            _bannerTransparentBtn.MouseExited += OnBannerUnhovered;
+        }
+
         if (_itemBanner != null)
         {
-            var bannerStyle = new StyleBoxFlat
-            {
-                BgColor = new Color(0.07f, 0.04f, 0.12f, 0.94f),
-                BorderColor = new Color(0.95f, 0.78f, 0.25f, 0.95f),
-                BorderWidthBottom = 2,
-                BorderWidthTop = 2,
-                BorderWidthLeft = 2,
-                BorderWidthRight = 2,
-                CornerRadiusTopLeft = 6,
-                CornerRadiusTopRight = 6,
-                CornerRadiusBottomLeft = 6,
-                CornerRadiusBottomRight = 6
-            };
-            _itemBanner.AddThemeStyleboxOverride("panel", bannerStyle);
+            ApplyItemBannerStyle(false);
             _itemBanner.Visible = false;
         }
 
@@ -381,7 +385,7 @@ public partial class HUD : CanvasLayer
 
         if (_bannerIcon != null)
         {
-            _bannerIcon.Texture = icon ?? Systems.PlaceholderSprite.CreateCircleTexture(14, color);
+            _bannerIcon.Texture = icon ?? Systems.PlaceholderSprite.CreateCircleTexture(16, color);
         }
 
         _bannerTween?.Kill();
@@ -390,21 +394,66 @@ public partial class HUD : CanvasLayer
         _itemBanner.Position = new Vector2(_itemBanner.Position.X, 35);
 
         _bannerTween = CreateTween();
-        // 1. Slide down with bounce
-        _bannerTween.Parallel().TweenProperty(_itemBanner, "position:y", 85.0f, 0.25)
+        // 1. Slide down with smooth bounce
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "position:y", 85.0f, 0.28)
             .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
-        _bannerTween.Parallel().TweenProperty(_itemBanner, "modulate:a", 1.0f, 0.20);
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "modulate:a", 1.0f, 0.22);
 
-        // 2. Hang proudly in view for 5 full seconds (requested: ~5 sec)
-        _bannerTween.TweenInterval(5.0);
-
-        // 3. Slide up and fade out smoothly
-        _bannerTween.Parallel().TweenProperty(_itemBanner, "position:y", 40.0f, 0.35)
-            .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.In);
-        _bannerTween.Parallel().TweenProperty(_itemBanner, "modulate:a", 0.0f, 0.35);
-        _bannerTween.Chain().TweenCallback(Callable.From(() => _itemBanner.Visible = false));
+        // Infinite stay: remains visible indefinitely until the player clicks anywhere on the banner to dismiss it!
 
         Systems.CameraShaker.Shake(0.12f);
+    }
+
+    public void DismissItemBanner()
+    {
+        if (_itemBanner == null || !_itemBanner.Visible) return;
+
+        _bannerTween?.Kill();
+        _bannerTween = CreateTween();
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "position:y", 40.0f, 0.22)
+            .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.In);
+        _bannerTween.Parallel().TweenProperty(_itemBanner, "modulate:a", 0.0f, 0.20);
+        _bannerTween.Chain().TweenCallback(Callable.From(() => _itemBanner.Visible = false));
+    }
+
+    private void ApplyItemBannerStyle(bool isHovered)
+    {
+        if (_itemBanner == null) return;
+
+        var bannerStyle = new StyleBoxFlat
+        {
+            BgColor = isHovered 
+                ? new Color(0.12f, 0.08f, 0.20f, 0.98f) 
+                : new Color(0.07f, 0.04f, 0.12f, 0.94f),
+            BorderColor = isHovered
+                ? new Color(1.0f, 0.92f, 0.45f, 1.0f)
+                : new Color(0.95f, 0.78f, 0.25f, 0.95f),
+            BorderWidthBottom = 2,
+            BorderWidthTop = 2,
+            BorderWidthLeft = 2,
+            BorderWidthRight = 2,
+            CornerRadiusTopLeft = 6,
+            CornerRadiusTopRight = 6,
+            CornerRadiusBottomLeft = 6,
+            CornerRadiusBottomRight = 6,
+            ShadowColor = new Color(0, 0, 0, 0.65f),
+            ShadowSize = isHovered ? 6 : 4
+        };
+        _itemBanner.AddThemeStyleboxOverride("panel", bannerStyle);
+    }
+
+    private void OnBannerHovered()
+    {
+        ApplyItemBannerStyle(true);
+        if (_bannerDismissHint != null)
+            _bannerDismissHint.AddThemeColorOverride("font_color", new Color(1.0f, 0.92f, 0.50f, 1.0f));
+    }
+
+    private void OnBannerUnhovered()
+    {
+        ApplyItemBannerStyle(false);
+        if (_bannerDismissHint != null)
+            _bannerDismissHint.AddThemeColorOverride("font_color", new Color(0.70f, 0.65f, 0.80f, 0.8f));
     }
 
     // ══════════════════════════════════════════════
