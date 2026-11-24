@@ -49,6 +49,16 @@ public partial class HUD : CanvasLayer
     private Label _bannerSubtitle;
     private Tween _bannerTween;
 
+    // ── Boss Intro Splash & Chamber Purged Banners ──
+    private PanelContainer _bossIntroModal;
+    private Label _bossIntroTitle;
+    private Label _bossIntroSubtitle;
+    private Tween _bossIntroTween;
+
+    private PanelContainer _roomClearedBanner;
+    private Label _roomClearedLabel;
+    private Tween _roomClearedTween;
+
     // ── Passive Relics Tray (Extra HUD) ──
     private HFlowContainer _relicsTray;
     private readonly HashSet<string> _collectedRelics = new();
@@ -227,6 +237,9 @@ public partial class HUD : CanvasLayer
         UpdateConsumables(0, 1, 1);
         UpdateControlsGuide();
         UpdateActiveItem("None", 0, 0);
+
+        SetupBossIntroModal();
+        SetupRoomClearedBanner();
     }
 
     private void StyleActiveItemSlot(bool isPrimed)
@@ -894,5 +907,149 @@ public partial class HUD : CanvasLayer
     public void ShowGameOver(int floor, int rooms, int enemiesKilled, int itemsCollected)
     {
         _gameOverScreen?.ShowDeathScreen(floor, rooms, enemiesKilled, itemsCollected);
+    }
+
+    // ══════════════════════════════════════════════
+    //  CINEMATIC BOSS INTRO & CHAMBER PURGED BANNERS
+    // ══════════════════════════════════════════════
+
+    private void SetupBossIntroModal()
+    {
+        _bossIntroModal = new PanelContainer
+        {
+            Name = "BossIntroModal",
+            Position = new Vector2(0, 240),
+            Size = new Vector2(1280, 150),
+            Visible = false,
+            Modulate = new Color(1, 1, 1, 0),
+            ZIndex = 40
+        };
+
+        var box = new StyleBoxFlat
+        {
+            BgColor = new Color(0.06f, 0.04f, 0.08f, 0.94f),
+            BorderColor = new Color(0.85f, 0.25f, 0.30f, 0.95f),
+            BorderWidthBottom = 3,
+            BorderWidthTop = 3
+        };
+        _bossIntroModal.AddThemeStyleboxOverride("panel", box);
+
+        var vbox = new VBoxContainer
+        {
+            Alignment = BoxContainer.AlignmentMode.Center,
+            Size = new Vector2(1280, 150)
+        };
+        vbox.AddThemeConstantOverride("separation", 8);
+
+        _bossIntroTitle = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        _bossIntroTitle.AddThemeFontSizeOverride("font_size", 28);
+        _bossIntroTitle.AddThemeColorOverride("font_color", new Color(1.0f, 0.88f, 0.35f));
+        _bossIntroTitle.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.95f));
+        _bossIntroTitle.AddThemeConstantOverride("shadow_offset_x", 2);
+        _bossIntroTitle.AddThemeConstantOverride("shadow_offset_y", 2);
+        vbox.AddChild(_bossIntroTitle);
+
+        _bossIntroSubtitle = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        _bossIntroSubtitle.AddThemeFontSizeOverride("font_size", 14);
+        _bossIntroSubtitle.AddThemeColorOverride("font_color", new Color(0.85f, 0.78f, 0.92f));
+        _bossIntroSubtitle.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.9f));
+        _bossIntroSubtitle.AddThemeConstantOverride("shadow_offset_x", 1);
+        _bossIntroSubtitle.AddThemeConstantOverride("shadow_offset_y", 1);
+        vbox.AddChild(_bossIntroSubtitle);
+
+        _bossIntroModal.AddChild(vbox);
+        AddChild(_bossIntroModal);
+    }
+
+    public void ShowBossIntro(string name, string title)
+    {
+        if (_bossIntroModal == null || _bossIntroTitle == null || _bossIntroSubtitle == null) return;
+
+        _bossIntroTitle.Text = $"💀  — {name.ToUpper()} —  💀";
+        _bossIntroSubtitle.Text = $"— {title} —";
+        _bossIntroModal.Visible = true;
+
+        Systems.CameraShaker.Shake(0.35f);
+
+        _bossIntroTween?.Kill();
+        _bossIntroTween = CreateTween();
+        _bossIntroTween.TweenProperty(_bossIntroModal, "modulate:a", 1.0f, 0.25)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        _bossIntroTween.TweenInterval(1.8);
+        _bossIntroTween.TweenProperty(_bossIntroModal, "modulate:a", 0.0f, 0.35)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+        _bossIntroTween.TweenCallback(Callable.From(() =>
+        {
+            _bossIntroModal.Visible = false;
+        }));
+    }
+
+    private void SetupRoomClearedBanner()
+    {
+        _roomClearedBanner = new PanelContainer
+        {
+            Name = "RoomClearedBanner",
+            Position = new Vector2((1280 - 280) / 2.0f, 82),
+            Size = new Vector2(280, 36),
+            Visible = false,
+            Modulate = new Color(1, 1, 1, 0),
+            ZIndex = 35
+        };
+
+        var box = new StyleBoxFlat
+        {
+            BgColor = new Color(0.08f, 0.12f, 0.10f, 0.90f),
+            BorderColor = new Color(0.25f, 0.85f, 0.50f, 0.90f),
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusTopLeft = 4,
+            CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4,
+            CornerRadiusBottomRight = 4
+        };
+        _roomClearedBanner.AddThemeStyleboxOverride("panel", box);
+
+        _roomClearedLabel = new Label
+        {
+            Text = "❖  CHAMBER PURGED  ❖",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        _roomClearedLabel.AddThemeFontSizeOverride("font_size", 13);
+        _roomClearedLabel.AddThemeColorOverride("font_color", new Color(0.40f, 0.95f, 0.60f));
+        _roomClearedLabel.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.9f));
+        _roomClearedLabel.AddThemeConstantOverride("shadow_offset_x", 1);
+        _roomClearedLabel.AddThemeConstantOverride("shadow_offset_y", 1);
+        _roomClearedBanner.AddChild(_roomClearedLabel);
+
+        AddChild(_roomClearedBanner);
+    }
+
+    public void ShowRoomClearedBanner()
+    {
+        if (_roomClearedBanner == null) return;
+
+        _roomClearedBanner.Visible = true;
+        _roomClearedTween?.Kill();
+        _roomClearedTween = CreateTween();
+        _roomClearedTween.TweenProperty(_roomClearedBanner, "modulate:a", 1.0f, 0.20)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+        _roomClearedTween.TweenInterval(1.3);
+        _roomClearedTween.TweenProperty(_roomClearedBanner, "modulate:a", 0.0f, 0.30)
+            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
+        _roomClearedTween.TweenCallback(Callable.From(() =>
+        {
+            _roomClearedBanner.Visible = false;
+        }));
     }
 }

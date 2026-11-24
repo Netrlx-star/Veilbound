@@ -52,6 +52,7 @@ public partial class Room : Node2D
 
     // ── Door locks (requires key to enter target room) ──
     public Dictionary<string, bool> DoorLocked { get; } = new();
+    public Dictionary<string, int> DoorTargetType { get; } = new(); // 2 = Boss, 3 = Treasure, 4 = Shop
 
     // ── References ──
     private List<BaseEnemy> _enemies = new();
@@ -365,6 +366,50 @@ public partial class Room : Node2D
             };
             door.AddChild(lockIcon);
         }
+        else if (DoorTargetType.TryGetValue(direction, out int targetType))
+        {
+            // Diegetic doorway heraldry for special rooms (Boss, Treasure, Shop)
+            string sigil = targetType switch
+            {
+                2 => "💀",
+                3 => "👑",
+                4 => "⚖️",
+                _ => ""
+            };
+
+            if (!string.IsNullOrEmpty(sigil))
+            {
+                var sigilLabel = new Label
+                {
+                    Text = sigil,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Position = visualPosition - triggerPos - new Vector2(16, 16),
+                    Size = new Vector2(32, 32)
+                };
+                sigilLabel.AddThemeFontSizeOverride("font_size", 16);
+
+                Color sigilCol = targetType switch
+                {
+                    2 => new Color(0.95f, 0.25f, 0.30f),
+                    3 => new Color(1.0f, 0.88f, 0.30f),
+                    4 => new Color(0.90f, 0.78f, 0.35f),
+                    _ => Colors.White
+                };
+                sigilLabel.AddThemeColorOverride("font_color", sigilCol);
+                door.AddChild(sigilLabel);
+
+                if (targetType == 2)
+                {
+                    // Pulsating boss doom aura on door
+                    var pulseTween = sigilLabel.CreateTween().SetLoops();
+                    pulseTween.TweenProperty(sigilLabel, "scale", new Vector2(1.25f, 1.25f), 0.5)
+                        .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+                    pulseTween.TweenProperty(sigilLabel, "scale", Vector2.One, 0.5)
+                        .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+                }
+            }
+        }
 
         // Store direction as metadata
         door.SetMeta("direction", direction);
@@ -481,7 +526,10 @@ public partial class Room : Node2D
         UpdateDoorVisuals(locked: false);
 
         // Visceral combat juice: camera shake + door unseal pop
-        CameraShaker.Shake(0.18f);
+        CameraShaker.Shake(0.20f);
+
+        // Chamber purged celebration banner
+        UI.HUD.Instance?.ShowRoomClearedBanner();
 
         foreach (var door in _doors)
         {
@@ -495,10 +543,35 @@ public partial class Room : Node2D
                 unsealTween.TweenProperty(visual, "scale", Vector2.One, 0.15)
                     .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
             }
+
+            SpawnDoorUnsealParticles(door.GlobalPosition);
         }
 
         EmitSignal(SignalName.RoomCleared);
         GameManager.Instance?.OnRoomCleared();
+    }
+
+    private void SpawnDoorUnsealParticles(Vector2 pos)
+    {
+        var particles = new CpuParticles2D
+        {
+            GlobalPosition = pos,
+            Emitting = true,
+            OneShot = true,
+            Explosiveness = 0.95f,
+            Amount = 14,
+            Lifetime = 0.45,
+            Direction = new Vector2(0, -1),
+            Spread = 180.0f,
+            Gravity = new Vector2(0, 40),
+            InitialVelocityMin = 35.0f,
+            InitialVelocityMax = 80.0f,
+            ScaleAmountMin = 2.0f,
+            ScaleAmountMax = 3.5f,
+            Color = new Color(0.40f, 0.95f, 0.55f, 0.9f)
+        };
+        GetTree().CurrentScene?.AddChild(particles);
+        particles.GetTree()?.CreateTimer(0.6).Connect("timeout", Callable.From(particles.QueueFree));
     }
 
     /// <summary>

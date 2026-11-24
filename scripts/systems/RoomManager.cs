@@ -294,6 +294,12 @@ public partial class RoomManager : Node2D
         room.HasLeftDoor   = HasRoomAt(gridPos + Vector2I.Left);
         room.HasRightDoor  = HasRoomAt(gridPos + Vector2I.Right);
 
+        // Determine door target room types for doorway heraldry (Boss, Treasure, Shop)
+        SetDoorTargetType(room, "top", gridPos + Vector2I.Up);
+        SetDoorTargetType(room, "bottom", gridPos + Vector2I.Down);
+        SetDoorTargetType(room, "left", gridPos + Vector2I.Left);
+        SetDoorTargetType(room, "right", gridPos + Vector2I.Right);
+
         // Check door lock state (Shop room 4 requires a key to enter)
         CheckDoorLockState(room, gridPos, "top", gridPos + Vector2I.Up);
         CheckDoorLockState(room, gridPos, "bottom", gridPos + Vector2I.Down);
@@ -485,6 +491,14 @@ public partial class RoomManager : Node2D
         }
     }
 
+    private void SetDoorTargetType(Room room, string direction, Vector2I neighborPos)
+    {
+        if (HasRoomAt(neighborPos))
+        {
+            room.DoorTargetType[direction] = _grid[neighborPos.X, neighborPos.Y];
+        }
+    }
+
     public void UnlockDoorConnection(Room room, string direction)
     {
         Vector2I offset = direction switch
@@ -545,6 +559,9 @@ public partial class RoomManager : Node2D
         var boss = _bossScene.Instantiate<Bosses.BossEnemy>();
         boss.Position = new Vector2(Room.RoomWidth / 2.0f, Room.RoomHeight / 2.0f);
         room.LockRoom();
+
+        // Dramatic Boss Encounter Title Splash Intro
+        UI.HUD.Instance?.ShowBossIntro(Bosses.BossEnemy.BossName, "Ancient Titan of the Shattered Core");
 
         boss.BossHealthUpdated += (cur, max) =>
         {
