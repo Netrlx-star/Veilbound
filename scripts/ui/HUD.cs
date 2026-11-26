@@ -327,12 +327,8 @@ public partial class HUD : CanvasLayer
         var activeData = Items.ActiveItemData.ActiveItemCatalog.Find(a => a.Name == name);
         _currentActiveItemDesc = activeData != null ? activeData.Description : "";
 
-        if (_activeItemContainer != null)
-        {
-            _activeItemContainer.TooltipText = name != "None"
-                ? $"{name}\n{_currentActiveItemDesc}\n[SPACEBAR] {currentCharges}/{maxCharges} Charges"
-                : "No Active Item equipped";
-        }
+        // Native TooltipText intentionally NOT set — custom hover card (ShowRelicTooltip)
+        // handles all active-item popups to prevent the double-popup overlap bug.
 
         bool isPrimed = maxCharges > 0 && currentCharges >= maxCharges;
         _activeItemNameLabel.Text = isPrimed ? $"[SPACE] {name} (PRIMED!)" : $"[SPACE] {name}";
