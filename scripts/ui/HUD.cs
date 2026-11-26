@@ -617,13 +617,7 @@ public partial class HUD : CanvasLayer
         };
         badge.AddChild(iconRect);
 
-        // Native tooltip fallback
-        string fullTooltip = name;
-        if (!string.IsNullOrEmpty(description)) fullTooltip += $"\n{description}";
-        if (!string.IsNullOrEmpty(statsText)) fullTooltip += $"\n{statsText}";
-        badge.TooltipText = fullTooltip;
-
-        // Custom rich hover card on mouse hover
+        // Custom rich hover card on mouse hover (no native TooltipText — that caused double-popup overlap)
         badge.MouseEntered += () =>
         {
             ShowRelicTooltip(name, description, statsText, color, badge);
